@@ -1,0 +1,1 @@
+import{InfoPage}from"@/components/ui/info-page";export default function About(){return <InfoPage eyebrow="Our story" title="Cinema beyond boundaries."><p>ORUN is a home for African cinema, independent voices, and the people who make stories possible.</p><p>This production foundation is designed for licensed films, documentaries, series, shorts, and original work.</p></InfoPage>}

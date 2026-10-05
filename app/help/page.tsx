@@ -1,0 +1,1 @@
+import{InfoPage}from"@/components/ui/info-page";export default function Help(){return <InfoPage eyebrow="Support" title="How can we help?"><p>For account, playback, subscription, rental, or purchase support, connect the configured support channel before launch.</p><p>No password, card number, passkey secret, or verification code should ever be sent to support.</p></InfoPage>}

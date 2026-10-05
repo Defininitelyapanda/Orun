@@ -1,0 +1,666 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+enum ContentStatus {
+  DRAFT
+  PROCESSING
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+enum ContentAccess {
+  FREE
+  STUDENT
+  ESSENTIAL
+  PREMIUM
+  BLACK
+  RENT
+  PURCHASE
+  ADMIN_ONLY
+}
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  PAUSED
+  CANCELLED
+  EXPIRED
+}
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+enum PaymentMethod {
+  MPESA
+  CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  BANK_TRANSFER
+  OTHER_MOBILE_MONEY
+}
+enum EntitlementSource {
+  SUBSCRIPTION
+  PURCHASE
+  RENTAL
+  PROMOTION
+  ADMIN_GRANT
+}
+enum MediaKind {
+  VIDEO
+  AUDIO
+  SUBTITLE
+  POSTER
+  BACKDROP
+  TRAILER
+  THUMBNAIL
+  AVATAR
+}
+enum MediaStatus {
+  UPLOADED
+  VALIDATING
+  PROCESSING
+  READY
+  FAILED
+}
+enum AdminRoleName {
+  SUPER_ADMIN
+  CONTENT_ADMIN
+  EDITOR
+  MODERATOR
+  FINANCE
+  ANALYST
+  SUPPORT
+}
+
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  emailVerifiedAt DateTime?
+  countryCode String? @db.VarChar(2)
+  status UserStatus @default(PENDING)
+  marketingOptIn Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profiles Profile[]
+  sessions Session[]
+}
+model Profile {
+  id String @id @default(cuid())
+  userId String
+  name String
+  avatarUrl String?
+  isKids Boolean @default(false)
+  locale String @default("en")
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model Session {
+  id String @id @default(cuid())
+  userId String
+  tokenHash String @unique
+  expiresAt DateTime
+  lastSeenAt DateTime @default(now())
+  ipHash String?
+  userAgent String?
+  revokedAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Passkey {
+  id String @id @default(cuid())
+  userId String
+  name String
+  credentialId String @unique
+  publicKey Bytes
+  counter BigInt @default(0)
+  transports String[]
+  deviceType String
+  backedUp Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model PasswordResetToken {
+  id String @id @default(cuid())
+  userId String
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+
+model SubscriptionPlan {
+  id String @id @default(cuid())
+  code String @unique
+  name String
+  priceAmount BigInt
+  currency String @db.VarChar(3)
+  billingInterval String @default("MONTH")
+  maxQuality Int
+  maxProfiles Int
+  maxStreams Int
+  downloadsEnabled Boolean @default(false)
+  audioQuality String
+  benefits Json
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Subscription {
+  id String @id @default(cuid())
+  userId String
+  planId String
+  status SubscriptionStatus
+  startsAt DateTime
+  currentPeriodEnd DateTime?
+  cancelledAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model SubscriptionEvent {
+  id String @id @default(cuid())
+  subscriptionId String
+  type String
+  data Json?
+  createdAt DateTime @default(now())
+}
+
+model Film {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  description String
+  longDescription String?
+  year Int
+  runtimeMinutes Int
+  ageRating String?
+  countryCode String
+  originalLanguage String
+  status ContentStatus @default(DRAFT)
+  access ContentAccess @default(PREMIUM)
+  isOriginal Boolean @default(false)
+  isShort Boolean @default(false)
+  purchaseAmount BigInt?
+  rentalAmount BigInt?
+  currency String? @db.VarChar(3)
+  publishedAt DateTime?
+  seoTitle String?
+  seoDescription String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, publishedAt])
+}
+model Series {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  description String
+  status ContentStatus @default(DRAFT)
+  access ContentAccess @default(PREMIUM)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Episode {
+  id String @id @default(cuid())
+  seriesId String
+  slug String
+  title String
+  description String
+  seasonNumber Int
+  episodeNumber Int
+  runtimeMinutes Int
+  status ContentStatus @default(DRAFT)
+  access ContentAccess @default(PREMIUM)
+  @@unique([seriesId, seasonNumber, episodeNumber])
+}
+model Genre {
+  id String @id @default(cuid())
+  slug String @unique
+  name String @unique
+}
+model FilmGenre {
+  filmId String
+  genreId String
+  @@id([filmId, genreId])
+}
+model Collection {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  description String?
+  kind String @default("EDITORIAL")
+  published Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model CollectionItem {
+  collectionId String
+  filmId String
+  position Int
+  @@id([collectionId, filmId])
+  @@unique([collectionId, position])
+}
+model Country {
+  id String @id @default(cuid())
+  code String @unique @db.VarChar(2)
+  name String
+}
+model Language {
+  id String @id @default(cuid())
+  code String @unique
+  name String
+}
+model Person {
+  id String @id @default(cuid())
+  slug String @unique
+  name String
+  biography String?
+  countryCode String?
+  photoUrl String?
+  roles Json
+  socialLinks Json?
+}
+
+model MediaAsset {
+  id String @id @default(cuid())
+  filmId String?
+  episodeId String?
+  kind MediaKind
+  status MediaStatus @default(UPLOADED)
+  storageKey String
+  sourceFilename String
+  contentType String
+  sizeBytes BigInt
+  checksum String?
+  processingProgress Int @default(0)
+  metadata Json?
+  errorMessage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model VideoRendition {
+  id String @id @default(cuid())
+  mediaAssetId String
+  resolution Int
+  bitrate Int
+  codec String
+  audioQuality String?
+  fileSize BigInt?
+  storageKey String
+  available Boolean @default(true)
+  @@unique([mediaAssetId, resolution, codec])
+}
+model AudioTrack {
+  id String @id @default(cuid())
+  mediaAssetId String
+  languageCode String
+  label String
+  codec String
+  storageKey String
+  isDefault Boolean @default(false)
+}
+model SubtitleTrack {
+  id String @id @default(cuid())
+  mediaAssetId String
+  languageCode String
+  label String
+  format String
+  storageKey String
+  isDefault Boolean @default(false)
+}
+
+model WatchHistory {
+  id String @id @default(cuid())
+  profileId String
+  filmId String
+  positionSeconds Int
+  completionPercent Float
+  completed Boolean @default(false)
+  lastWatchedAt DateTime @updatedAt
+  @@unique([profileId, filmId])
+}
+model ContinueWatching {
+  id String @id @default(cuid())
+  profileId String
+  filmId String
+  positionSeconds Int
+  updatedAt DateTime @updatedAt
+  @@unique([profileId, filmId])
+}
+model Watchlist {
+  profileId String
+  filmId String
+  createdAt DateTime @default(now())
+  @@id([profileId, filmId])
+}
+model Rating {
+  id String @id @default(cuid())
+  profileId String
+  filmId String
+  value Int
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([profileId, filmId])
+}
+model Review {
+  id String @id @default(cuid())
+  profileId String
+  filmId String
+  title String?
+  body String
+  status String @default("PUBLISHED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Comment {
+  id String @id @default(cuid())
+  profileId String
+  filmId String
+  parentId String?
+  body String
+  status String @default("PUBLISHED")
+  pinned Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model CommentReply {
+  id String @id @default(cuid())
+  commentId String
+  profileId String
+  body String
+  createdAt DateTime @default(now())
+}
+model CommentLike {
+  id String @id @default(cuid())
+  commentId String
+  profileId String
+  createdAt DateTime @default(now())
+  @@unique([commentId, profileId])
+}
+model CommentReport {
+  id String @id @default(cuid())
+  commentId String
+  reporterProfileId String
+  reason String
+  status String @default("OPEN")
+  moderationNote String?
+  createdAt DateTime @default(now())
+}
+
+model Device {
+  id String @id @default(cuid())
+  userId String
+  name String
+  fingerprintHash String
+  lastIpHash String?
+  browser String?
+  operatingSystem String?
+  verifiedAt DateTime?
+  lastActiveAt DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+model PlaybackSession {
+  id String @id @default(cuid())
+  profileId String
+  deviceId String
+  filmId String?
+  episodeId String?
+  maxQuality Int
+  tokenId String @unique
+  startedAt DateTime @default(now())
+  lastHeartbeatAt DateTime @default(now())
+  endedAt DateTime?
+  @@index([profileId, endedAt])
+}
+
+model Order {
+  id String @id @default(cuid())
+  userId String
+  status String @default("PENDING")
+  amount BigInt
+  currency String @db.VarChar(3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items OrderItem[]
+  payments Payment[]
+}
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String
+  productType String
+  productId String
+  description String
+  unitAmount BigInt
+  discountAmount BigInt @default(0)
+  totalAmount BigInt
+  currency String @db.VarChar(3)
+  snapshot Json
+  order Order @relation(fields: [orderId], references: [id])
+}
+model Payment {
+  id String @id @default(cuid())
+  orderId String
+  provider PaymentMethod
+  providerTransactionId String?
+  status PaymentStatus @default(PENDING)
+  amount BigInt
+  currency String @db.VarChar(3)
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order Order @relation(fields: [orderId], references: [id])
+  refunds Refund[]
+  events PaymentProviderEvent[]
+  @@index([provider, providerTransactionId])
+}
+model PaymentProviderEvent {
+  id String @id @default(cuid())
+  paymentId String?
+  provider PaymentMethod
+  providerEventId String
+  eventType String
+  payload Json
+  receivedAt DateTime @default(now())
+  processedAt DateTime?
+  payment Payment? @relation(fields: [paymentId], references: [id])
+  @@unique([provider, providerEventId])
+}
+model Refund {
+  id String @id @default(cuid())
+  paymentId String
+  providerRefundId String?
+  amount BigInt
+  currency String @db.VarChar(3)
+  reason String
+  status PaymentStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  payment Payment @relation(fields: [paymentId], references: [id])
+}
+model Purchase {
+  id String @id @default(cuid())
+  userId String
+  filmId String
+  orderId String @unique
+  amount BigInt
+  currency String @db.VarChar(3)
+  createdAt DateTime @default(now())
+}
+model Rental {
+  id String @id @default(cuid())
+  userId String
+  filmId String
+  orderId String @unique
+  amount BigInt
+  currency String @db.VarChar(3)
+  purchasedAt DateTime @default(now())
+  activatedAt DateTime?
+  expiresAt DateTime?
+  allowedDevices Int @default(2)
+}
+model Entitlement {
+  id String @id @default(cuid())
+  userId String
+  profileId String?
+  filmId String?
+  episodeId String?
+  source EntitlementSource
+  sourceId String
+  qualityLimit Int
+  startsAt DateTime
+  expiresAt DateTime?
+  revokedAt DateTime?
+  @@index([userId, profileId, filmId, episodeId])
+}
+
+model Offer {
+  id String @id @default(cuid())
+  name String
+  description String
+  discountType String
+  discountValue Int?
+  fixedAmount BigInt?
+  currency String?
+  eligibleCountry String?
+  startsAt DateTime
+  expiresAt DateTime
+  maxRedemptions Int?
+  active Boolean @default(true)
+}
+model Coupon {
+  id String @id @default(cuid())
+  code String @unique
+  offerId String
+  active Boolean @default(true)
+  redemptions Int @default(0)
+  perUserLimit Int @default(1)
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  type String
+  title String
+  body String
+  href String?
+  readAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Page {
+  id String @id @default(cuid())
+  slug String @unique
+  title String
+  status ContentStatus @default(DRAFT)
+  sections Json
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model NavigationItem {
+  id String @id @default(cuid())
+  menu String
+  label String
+  href String?
+  parentId String?
+  position Int
+  enabled Boolean @default(true)
+}
+model HomepageSection {
+  id String @id @default(cuid())
+  type String
+  title String?
+  props Json
+  position Int @unique
+  enabled Boolean @default(true)
+  startsAt DateTime?
+  expiresAt DateTime?
+}
+model Banner {
+  id String @id @default(cuid())
+  title String
+  body String?
+  imageUrl String?
+  href String?
+  startsAt DateTime?
+  expiresAt DateTime?
+  enabled Boolean @default(false)
+}
+model AnalyticsEvent {
+  id String @id @default(cuid())
+  name String
+  userId String?
+  profileId String?
+  sessionId String?
+  countryCode String?
+  properties Json?
+  occurredAt DateTime @default(now())
+  @@index([name, occurredAt])
+}
+
+model AdminUser {
+  id String @id @default(cuid())
+  userId String @unique
+  totpSecretEncrypted String?
+  twoFactorVerifiedAt DateTime?
+  active Boolean @default(true)
+  roles AdminUserRole[]
+}
+model AdminRole {
+  id String @id @default(cuid())
+  name AdminRoleName @unique
+  permissions String[]
+  users AdminUserRole[]
+}
+model AdminUserRole {
+  adminUserId String
+  roleId String
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([adminUserId, roleId])
+}
+model AuditLog {
+  id String @id @default(cuid())
+  adminUserId String?
+  action String
+  targetType String
+  targetId String?
+  ipHash String?
+  before Json?
+  after Json?
+  createdAt DateTime @default(now())
+  @@index([targetType, targetId])
+}
+model PlatformSetting {
+  key String @id
+  value Json
+  updatedAt DateTime @updatedAt
+}
+model IngestionJob {
+  id String @id @default(cuid())
+  mediaAssetId String
+  sourceType String
+  sourceUrl String?
+  status MediaStatus @default(UPLOADED)
+  progress Int @default(0)
+  attempts Int @default(0)
+  error String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

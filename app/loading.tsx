@@ -1,0 +1,1 @@
+export default function Loading(){return <main className="grid min-h-screen place-items-center bg-background"><div className="text-center"><div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-amber"/><p className="mt-5 font-display tracking-[.3em]">ORUN</p></div></main>}

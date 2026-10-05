@@ -1,0 +1,1 @@
+import{AppShell}from"@/components/navigation/app-shell";import{CatalogGrid}from"@/components/film/catalog-grid";import{films}from"@/server/demo/catalog";export default function Series(){return <AppShell><p className="eyebrow">Stories that stay</p><h1 className="mb-10 font-display text-4xl md:text-6xl">Series</h1><CatalogGrid items={films.slice(2,8)}/></AppShell>}

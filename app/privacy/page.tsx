@@ -1,0 +1,1 @@
+import{InfoPage}from"@/components/ui/info-page";export default function Privacy(){return <InfoPage eyebrow="Legal placeholder" title="Privacy Policy"><p>This page is an editable CMS placeholder. It must describe actual collection, retention, processing, export, deletion, cookie, analytics, and international-transfer practices before launch.</p></InfoPage>}

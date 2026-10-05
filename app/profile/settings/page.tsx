@@ -1,0 +1,1 @@
+import{InfoPage}from"@/components/ui/info-page";export default function Settings(){return <InfoPage eyebrow="Your account" title="Preferences & privacy"><p>Profile, language, notification, marketing, data export, and account deletion workflows are represented in the database and should be connected to authenticated mutation endpoints before launch.</p></InfoPage>}

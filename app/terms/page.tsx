@@ -1,0 +1,1 @@
+import{InfoPage}from"@/components/ui/info-page";export default function Terms(){return <InfoPage eyebrow="Legal placeholder" title="Terms of Service"><p>This page is an editable CMS placeholder and is not legal advice. Qualified counsel should approve terms for every operating jurisdiction before launch.</p></InfoPage>}

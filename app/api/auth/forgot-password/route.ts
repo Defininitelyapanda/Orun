@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";import { z } from "zod";import { prisma } from "@/lib/db/prisma";import { Pbkdf2PasswordHasher } from "@/lib/auth/passwords";import { AuthService } from "@/server/services/auth-service";
+export const runtime="nodejs";export async function POST(request:Request){const{email}=z.object({email:z.string().email()}).parse(Object.fromEntries(await request.formData()));await new AuthService(prisma,new Pbkdf2PasswordHasher()).createReset(email);return NextResponse.redirect(new URL("/auth/login?reset=sent",request.url),303)}

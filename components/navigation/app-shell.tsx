@@ -1,0 +1,1 @@
+import type{ReactNode}from"react";import{Navbar}from"./navbar";import{MobileNav}from"./mobile-nav";export function AppShell({children}:{children:ReactNode}){return <main className="min-h-screen bg-background pb-24 text-foreground md:pb-0"><Navbar/><div className="mx-auto max-w-[1600px] px-5 pb-20 pt-28 md:px-12 lg:px-20">{children}</div><MobileNav/></main>}

@@ -1,0 +1,1 @@
+import{AppShell}from"@/components/navigation/app-shell";import{CatalogGrid}from"@/components/film/catalog-grid";import{films}from"@/server/demo/catalog";export default function MyList(){return <AppShell><h1 className="mb-10 font-display text-4xl md:text-6xl">My List</h1><CatalogGrid items={films.slice(1,5)}/></AppShell>}

@@ -1,0 +1,1 @@
+import{AppShell}from"@/components/navigation/app-shell";import{CatalogGrid}from"@/components/film/catalog-grid";import{films}from"@/server/demo/catalog";export default function Shorts(){return <AppShell><p className="eyebrow">New voices</p><h1 className="mb-10 font-display text-4xl md:text-6xl">ORUN Shorts</h1><CatalogGrid items={films.filter(f=>f.runtime<40)}/></AppShell>}
