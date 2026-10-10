@@ -10,13 +10,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "worker:media": "tsx server/workers/media-worker.ts"
+    "worker:media": "tsx server/workers/media-worker.ts",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview",
+    "deploy": "vinext-cloudflare deploy",
+    "deploy:vinext": "vinext-cloudflare deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -49,7 +54,10 @@
     "sonner": "^2.0.8",
     "tailwind-merge": "3.6.0",
     "vaul": "^1.1.2",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "vinext": "1.1.0",
+    "react-server-dom-webpack": "19.2.6",
+    "@vinext/cloudflare": "1.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.2.1",
@@ -63,7 +71,12 @@
     "tw-animate-css": "^1.4.0",
     "tsx": "^4.20.6",
     "typescript": "5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vite": "8.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "@vitejs/plugin-rsc": "0.5.36",
+    "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02",
+    "cf": "1.0.0-beta.14"
   },
   "type": "module"
 }
