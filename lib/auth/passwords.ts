@@ -15,7 +15,9 @@ export class Pbkdf2PasswordHasher implements PasswordHasher {
     const actual = Buffer.from(await this.derive(password, Buffer.from(saltValue, "base64url"), Number(rounds)));
     return actual.length === expected.length && timingSafeEqual(actual, expected);
   }
-  private derive(password: string, salt: Uint8Array, iterations: number) {
-    return crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations }, crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]), 256);
+  private async derive(password: string, salt: Uint8Array, iterations: number) {
+    const saltBytes = new Uint8Array(salt);
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    return crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: saltBytes, iterations }, key, 256);
   }
 }
