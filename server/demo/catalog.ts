@@ -1,3 +1,34 @@
-export type Film={id:string;slug:string;title:string;year:number;runtime:number;country:string;genres:string[];score:number;ageRating:string;synopsis:string;director:string;isOriginal?:boolean;moods:string[]};
-export const films:Film[]=[{id:"f1",slug:"the-last-light-of-kibera",title:"The Last Light",year:2026,runtime:108,country:"Kenya",genres:["Drama","Mystery"],score:94,ageRating:"16+",synopsis:"On the eve of a citywide blackout, a young cinematographer follows a forgotten reel of film through Nairobi and discovers a story her family chose to bury.",director:"Amara Njoroge",isOriginal:true,moods:["Emotional","Intense"]},{id:"f2",slug:"salt-roads",title:"Salt Roads",year:2025,runtime:96,country:"Senegal",genres:["Drama"],score:91,ageRating:"13+",synopsis:"Two sisters cross the coast to return a final letter.",director:"Aïda Fall",moods:["Emotional","Cultural"]},{id:"f3",slug:"after-the-rain",title:"After the Rain",year:2024,runtime:88,country:"Uganda",genres:["Romance"],score:88,ageRating:"13+",synopsis:"A chance reunion changes the shape of a quiet season.",director:"Joel Okello",moods:["Romantic"]},{id:"f4",slug:"red-earth-radio",title:"Red Earth Radio",year:2026,runtime:114,country:"Ghana",genres:["Thriller"],score:96,ageRating:"16+",synopsis:"A late-night host receives a call from tomorrow.",director:"Esi Mensah",isOriginal:true,moods:["Intense"]},{id:"f5",slug:"the-blue-hour",title:"The Blue Hour",year:2025,runtime:74,country:"Rwanda",genres:["Documentary"],score:92,ageRating:"PG",synopsis:"Kigali wakes through the eyes of its night workers.",director:"Mutesi Ineza",moods:["Thought-provoking"]},{id:"f6",slug:"soft-thunder",title:"Soft Thunder",year:2023,runtime:102,country:"Nigeria",genres:["Drama"],score:86,ageRating:"16+",synopsis:"Three friends rebuild a music venue and themselves.",director:"Nneka Obi",moods:["Inspirational"]},{id:"f7",slug:"twelve-minutes-to-dawn",title:"Twelve Minutes to Dawn",year:2025,runtime:12,country:"Tanzania",genres:["Short","Sci-Fi"],score:90,ageRating:"13+",synopsis:"A commuter relives the same final bus ride.",director:"Amani Msuya",moods:["Short watch"]},{id:"f8",slug:"paper-moons",title:"Paper Moons",year:2024,runtime:84,country:"South Africa",genres:["Comedy"],score:83,ageRating:"13+",synopsis:"A family wedding unravels over one misplaced invitation.",director:"Lerato Molefe",moods:["Funny"]},{id:"f9",slug:"borrowed-sky",title:"Borrowed Sky",year:2026,runtime:99,country:"Ethiopia",genres:["Drama"],score:95,ageRating:"PG",synopsis:"An astronomer returns home to build a village observatory.",director:"Selam Bekele",isOriginal:true,moods:["Inspirational"]},{id:"f10",slug:"echoes-of-mombasa",title:"Echoes of Mombasa",year:2025,runtime:91,country:"Kenya",genres:["Mystery"],score:89,ageRating:"16+",synopsis:"An archivist finds a voice hidden in the city’s oldest recordings.",director:"Zawadi Ali",moods:["Cultural"]},{id:"f11",slug:"small-gods",title:"Small Gods",year:2024,runtime:106,country:"Zimbabwe",genres:["Experimental"],score:87,ageRating:"16+",synopsis:"Memory, myth and a disappearing river converge.",director:"Tariro Moyo",moods:["Experimental"]}];
-export const homeSections=[{title:"ORUN Tonight",kicker:"Tonight’s selection",filmIds:["f4","f1","f9"]},{title:"New on ORUN",filmIds:["f10","f5","f8","f2","f7"]},{title:"Hidden gems",kicker:"Films worth discovering",filmIds:["f11","f3","f6","f2"]},{title:"African cinema",filmIds:["f9","f10","f2","f5","f6"]}];
+export type Film = {
+  id: string;
+  slug: string;
+  title: string;
+  year: number;
+  runtime: number;
+  country: string;
+  genres: string[];
+  score?: number;
+  ageRating: string;
+  synopsis: string;
+  director: string;
+  isOriginal?: boolean;
+  moods: string[];
+  youtubeId?: string;
+  posterUrl?: string;
+};
+
+const youtubePoster = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+export const films: Film[] = [
+  { id: "b28-threshold", slug: "threshold", title: "Threshold", year: 2026, runtime: 12, country: "Kenya", genres: ["Drama", "Romance"], ageRating: "Unrated", synopsis: "A Kenyan story exploring the pressure, hope and heartbreak inside young relationships.", director: "B28 Entertainment", moods: ["Emotional", "Romantic"], youtubeId: "mN1VCgEjXcg", posterUrl: youtubePoster("mN1VCgEjXcg") },
+  { id: "b28-shattered", slug: "shattered", title: "Shattered", year: 2026, runtime: 18, country: "Kenya", genres: ["Drama", "Short"], ageRating: "Unrated", synopsis: "A short film about the invisible emotional weight people carry behind ordinary appearances.", director: "B28 Entertainment", moods: ["Emotional", "Thought-provoking"], youtubeId: "vIvOkmZxvYg", posterUrl: youtubePoster("vIvOkmZxvYg") },
+  { id: "b28-betrayed", slug: "betrayed", title: "Betrayed", year: 2025, runtime: 9, country: "Kenya", genres: ["Drama", "Short"], ageRating: "Unrated", synopsis: "A compact Kenyan drama about trust, loyalty and the consequences of betrayal.", director: "B28 Entertainment", moods: ["Intense", "Short watch"], youtubeId: "faBS1DkOivM", posterUrl: youtubePoster("faBS1DkOivM") },
+  { id: "b28-please-call-me", slug: "please-call-me", title: "Please Call Me", year: 2025, runtime: 0, country: "Kenya", genres: ["Drama"], ageRating: "Unrated", synopsis: "A Nairobi-set film confronting the quiet struggles carried by a woman whose story is too easily overlooked.", director: "B28 Entertainment", moods: ["Emotional", "Cultural"], youtubeId: "JJ8rAKMJOfA", posterUrl: youtubePoster("JJ8rAKMJOfA") },
+  { id: "b28-kiza", slug: "kiza", title: "Kiza", year: 2025, runtime: 19, country: "Kenya", genres: ["Drama", "Youth"], ageRating: "Unrated", synopsis: "A Kenyan youth drama centered on the uncertainty and struggles of finding a way forward.", director: "B28 Entertainment", moods: ["Emotional", "Inspirational"], youtubeId: "JpKsOGtn5J0", posterUrl: youtubePoster("JpKsOGtn5J0") },
+  { id: "b28-fragile-hearts", slug: "fragile-hearts", title: "Fragile Hearts", year: 2024, runtime: 0, country: "Kenya", genres: ["Drama", "Romance"], ageRating: "Unrated", synopsis: "A Kenyan relationship drama about vulnerable hearts and the choices that test them.", director: "B28 Entertainment", moods: ["Romantic", "Emotional"], youtubeId: "sSmx-umq-lU", posterUrl: youtubePoster("sSmx-umq-lU") },
+];
+
+export const homeSections = [
+  { title: "B28 Film Premiere", kicker: "Now showing on ORUN", filmIds: films.map((film) => film.id) },
+  { title: "Kenyan stories", filmIds: ["b28-threshold", "b28-please-call-me", "b28-kiza", "b28-fragile-hearts"] },
+  { title: "Short films", kicker: "Watch something powerful", filmIds: ["b28-shattered", "b28-betrayed", "b28-threshold"] },
+];

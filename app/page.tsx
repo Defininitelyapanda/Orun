@@ -11,11 +11,11 @@ export default function Home() {
     <main className="min-h-screen overflow-hidden bg-background pb-24 text-foreground md:pb-0">
       <Navbar />
       <section className="hero relative flex min-h-[88svh] items-end overflow-hidden px-5 pb-16 pt-28 md:min-h-[92vh] md:px-12 md:pb-24 lg:px-20">
-        <div className="hero-art absolute inset-0" /><div className="hero-shade absolute inset-0" />
+        <div className="hero-art absolute inset-0" style={hero.posterUrl ? { backgroundImage: `url(${hero.posterUrl})` } : undefined} /><div className="hero-shade absolute inset-0" />
         <div className="relative z-10 max-w-2xl animate-reveal">
-          <div className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-amber"><span className="h-px w-8 bg-amber" /> ORUN Original</div>
+          <div className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-amber"><span className="h-px w-8 bg-amber" /> B28 Entertainment on ORUN</div>
           <h1 className="font-display text-[clamp(3rem,8vw,7rem)] leading-[.86] tracking-[-.04em]">{hero.title}</h1>
-          <p className="mt-5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground"><span className="rounded border border-white/20 px-2 py-1 text-white">{hero.ageRating}</span><span>{hero.year}</span><span>{hero.runtime} min</span><span>{hero.genres.join(" · ")}</span><strong className="text-amber">{hero.score}% ORUN score</strong></p>
+          <p className="mt-5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground"><span className="rounded border border-white/20 px-2 py-1 text-white">{hero.ageRating}</span><span>{hero.year}</span>{hero.runtime > 0 && <span>{hero.runtime} min</span>}<span>{hero.genres.join(" · ")}</span><strong className="text-amber">Streaming from YouTube</strong></p>
           <p className="mt-5 max-w-xl text-base leading-7 text-white/75 md:text-lg">{hero.synopsis}</p>
           <div className="mt-8 flex items-center gap-3"><Link className="primary-action" href={`/watch/${hero.id}`}><Play size={18} fill="currentColor" /> Watch now</Link><button className="glass-action" aria-label={`Add ${hero.title} to My List`}><Plus size={19} /> My list</button></div>
         </div>
