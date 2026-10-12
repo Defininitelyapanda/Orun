@@ -25,7 +25,6 @@ export default function Home() {
         <section className="px-5 md:px-12 lg:px-20"><div className="mood-panel"><div><p className="eyebrow"><Sparkles size={14} /> ORUN Mood</p><h2 className="font-display text-2xl md:text-3xl">What are you in the mood for?</h2></div><div className="flex flex-wrap gap-2">{["Emotional","Intense","Funny","Cultural","Short watch"].map((mood) => <Link key={mood} href={`/discover?mood=${encodeURIComponent(mood)}`} className="mood-chip">{mood}</Link>)}</div></div></section>
         {homeSections.map((section) => <FilmRow key={section.title} title={section.title} kicker={section.kicker} films={section.filmIds.map((id) => films.find((film) => film.id === id)).filter(Boolean) as typeof films} />)}
       </div>
-      <footer className="border-t border-white/8 px-5 py-12 text-sm text-white/45 md:px-12 lg:px-20"><div className="flex flex-col justify-between gap-6 md:flex-row"><div><p className="font-display text-2xl tracking-[.18em] text-white">ORUN</p><p className="mt-2">Cinema Beyond Boundaries.</p></div><nav className="flex flex-wrap gap-6"><Link href="/about">About</Link><Link href="/help">Help</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></nav></div></footer>
       <MobileNav />
     </main>
   );
