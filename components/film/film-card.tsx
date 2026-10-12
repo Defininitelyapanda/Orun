@@ -11,6 +11,18 @@ const gradients = ["from-[#5a2d20] via-[#1c3148] to-[#07101a]", "from-[#143a45] 
 export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
   const [previewing, setPreviewing] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [autoplayTrailers, setAutoplayTrailers] = useState(true);
+  useEffect(() => {
+    const task = window.setTimeout(() => {
+    try {
+      const stored = localStorage.getItem("orun_settings_v1");
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as { profile?: { autoplayTrailers?: boolean } };
+      if (typeof parsed.profile?.autoplayTrailers === "boolean") setAutoplayTrailers(parsed.profile.autoplayTrailers);
+    } catch { /* Invalid local preferences retain the safe default. */ }
+    }, 0);
+    return () => window.clearTimeout(task);
+  }, []);
   const posterStyle = film.posterUrl ? { backgroundImage: `linear-gradient(to top,rgba(5,7,11,.96),rgba(5,7,11,.04) 72%),url(${film.posterUrl})` } : undefined;
 
   useEffect(() => {
@@ -46,7 +58,7 @@ export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
         }}
       >
         <div className={`relative aspect-[2/3] bg-gradient-to-br bg-cover bg-center ${gradients[index % gradients.length]}`} style={posterStyle}>
-          {previewing && mutedPreviewUrl && (
+          {previewing && autoplayTrailers && mutedPreviewUrl && (
             <iframe
               className="pointer-events-none absolute inset-0 h-full w-full scale-[1.02] bg-black object-cover"
               src={mutedPreviewUrl}

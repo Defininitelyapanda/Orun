@@ -87,6 +87,22 @@ enum AdminRoleName {
   ANALYST
   SUPPORT
 }
+enum DataRequestStatus {
+  REQUESTED
+  PROCESSING
+  READY
+  EXPIRED
+  FAILED
+  CANCELLED
+}
+enum AccountDeletionStatus {
+  REQUESTED
+  VERIFYING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
 
 model User {
   id String @id @default(cuid())
@@ -101,6 +117,14 @@ model User {
   updatedAt DateTime @updatedAt
   profiles Profile[]
   sessions Session[]
+  accountPreference AccountPreference?
+  privacyPreference PrivacyPreference?
+  notificationPreference NotificationPreference?
+  cookieConsents CookieConsent[]
+  dataExportRequests DataExportRequest[]
+  accountDeletionRequest AccountDeletionRequest?
+  securityEvents SecurityEvent[]
+  privacyAuditEvents PrivacyAuditEvent[]
 }
 model Profile {
   id String @id @default(cuid())
@@ -111,6 +135,7 @@ model Profile {
   locale String @default("en")
   createdAt DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preference ProfilePreference?
   @@index([userId])
 }
 model Session {
@@ -144,6 +169,164 @@ model PasswordResetToken {
   usedAt DateTime?
   createdAt DateTime @default(now())
   @@index([userId, expiresAt])
+}
+
+model AccountPreference {
+  id String @id @default(cuid())
+  userId String @unique
+  theme String @default("SYSTEM")
+  interfaceLanguage String @default("en")
+  regionCode String? @db.VarChar(2)
+  timeZone String @default("Africa/Nairobi")
+  currency String @default("KES") @db.VarChar(3)
+  dateTimeFormat String @default("REGIONAL")
+  browsingDensity String @default("COMFORTABLE")
+  reduceMotion Boolean @default(false)
+  highContrast Boolean @default(false)
+  largerText Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProfilePreference {
+  id String @id @default(cuid())
+  profileId String @unique
+  contentLanguage String @default("en")
+  preferredGenres String[] @default([])
+  durationMin Int @default(0)
+  durationMax Int @default(240)
+  preferredCountries String[] @default([])
+  audioLanguages String[] @default([])
+  subtitleLanguages String[] @default([])
+  hideWatched Boolean @default(false)
+  allowOutsideGenres Boolean @default(true)
+  showDescriptions Boolean @default(true)
+  showRatings Boolean @default(true)
+  showMetadata Boolean @default(true)
+  personalizedRecommendations Boolean @default(true)
+  useWatchHistory Boolean @default(true)
+  useRatings Boolean @default(true)
+  continueWatchingPersonalization Boolean @default(true)
+  homepagePersonalization Boolean @default(true)
+  browsingPersonalization Boolean @default(false)
+  playbackQuality String @default("AUTO")
+  autoplayNext Boolean @default(true)
+  autoplayTrailers Boolean @default(true)
+  rememberPosition Boolean @default(true)
+  resumeUnfinished Boolean @default(true)
+  showPlaybackControls Boolean @default(true)
+  defaultSubtitles String @default("MATCH_CONTENT")
+  preferredAudioTrack String @default("ORIGINAL")
+  playbackSpeed Float @default(1)
+  skipIntro Boolean @default(false)
+  skipRecap Boolean @default(false)
+  lowerBandwidth Boolean @default(false)
+  adaptiveQuality Boolean @default(true)
+  subtitleSize String @default("MEDIUM")
+  subtitleColor String @default("#FFFFFF")
+  subtitleBackground String @default("#000000")
+  subtitleBackgroundOpacity Int @default(75)
+  subtitleOutline String @default("SHADOW")
+  subtitlePosition String @default("BOTTOM")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model PrivacyPreference {
+  id String @id @default(cuid())
+  userId String @unique
+  productAnalytics Boolean @default(false)
+  personalizedMeasurement Boolean @default(false)
+  diagnosticReporting Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationPreference {
+  id String @id @default(cuid())
+  userId String @unique
+  promotionalEmail Boolean @default(false)
+  newReleaseEmail Boolean @default(false)
+  recommendationEmail Boolean @default(false)
+  watchlistEmail Boolean @default(false)
+  pushNewReleases Boolean @default(false)
+  pushWatchlist Boolean @default(false)
+  pushRecommendations Boolean @default(false)
+  pushSubscriptionReminders Boolean @default(false)
+  inAppAnnouncements Boolean @default(true)
+  inAppAccountEvents Boolean @default(true)
+  inAppContentAvailability Boolean @default(true)
+  inAppBillingEvents Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CookieConsent {
+  id String @id @default(cuid())
+  userId String?
+  policyVersion String
+  preferences Boolean @default(false)
+  analytics Boolean @default(false)
+  advertising Boolean @default(false)
+  regionCode String? @db.VarChar(2)
+  recordedAt DateTime @default(now())
+  withdrawnAt DateTime?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId, recordedAt])
+}
+
+model DataExportRequest {
+  id String @id @default(cuid())
+  userId String
+  status DataRequestStatus @default(REQUESTED)
+  storageKey String?
+  downloadTokenHash String? @unique
+  expiresAt DateTime?
+  failureReason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completedAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model AccountDeletionRequest {
+  id String @id @default(cuid())
+  userId String @unique
+  status AccountDeletionStatus @default(REQUESTED)
+  requestedAt DateTime @default(now())
+  verifiedAt DateTime?
+  completedAt DateTime?
+  failureReason String?
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SecurityEvent {
+  id String @id @default(cuid())
+  userId String
+  type String
+  summary String
+  ipHash String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model PrivacyAuditEvent {
+  id String @id @default(cuid())
+  userId String
+  action String
+  category String
+  metadata Json?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
 }
 
 model SubscriptionPlan {
