@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ExternalLink, Play, Volume2, X } from "lucide-react";
 import type { Film } from "@/server/demo/catalog";
@@ -85,25 +86,26 @@ export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
         </Link>
       </article>
 
-      {expanded && fullPreviewUrl && (
+      {expanded && fullPreviewUrl && createPortal(
         <div className="fixed inset-0 z-[100] grid bg-black" role="dialog" aria-modal="true" aria-label={`${film.title} trailer`}>
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-4 bg-gradient-to-b from-black/95 to-transparent p-4 pb-12 md:p-7 md:pb-16">
-            <Link href={`/films/${film.slug}`} className="inline-flex items-center gap-2 font-display text-lg tracking-wide text-white hover:text-amber">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[101] flex items-center justify-between gap-4 bg-gradient-to-b from-black/95 to-transparent p-4 pb-12 md:p-7 md:pb-16">
+            <Link href={`/films/${film.slug}`} className="pointer-events-auto inline-flex items-center gap-2 font-display text-lg tracking-wide text-white hover:text-amber">
               {film.title} <ExternalLink size={16} />
             </Link>
-            <button type="button" autoFocus onClick={() => setExpanded(false)} className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Close trailer">
+            <button type="button" autoFocus onClick={() => setExpanded(false)} className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20" aria-label="Close trailer">
               <X size={22} />
             </button>
           </div>
           <iframe
-            className="h-full w-full"
+            className="relative z-0 h-full w-full"
             src={fullPreviewUrl}
             title={`${film.title} trailer`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
           />
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
