@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ExternalLink, Play, Volume2, X } from "lucide-react";
+import { Check, ExternalLink, Eye, Play, Volume2, X } from "lucide-react";
 import type { Film } from "@/server/demo/catalog";
+import { getWatchState, readWatchHistory, WATCH_HISTORY_EVENT, type WatchProgress } from "@/lib/viewer/watch-history";
 
 const gradients = ["from-[#5a2d20] via-[#1c3148] to-[#07101a]", "from-[#143a45] via-[#1c253f] to-[#080b12]", "from-[#50381d] via-[#282330] to-[#07090e]", "from-[#2b193d] via-[#122e45] to-[#06090e]", "from-[#15372e] via-[#19253e] to-[#06080d]"];
 
@@ -12,17 +13,30 @@ export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
   const [previewing, setPreviewing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [autoplayTrailers, setAutoplayTrailers] = useState(true);
+  const [progress, setProgress] = useState<WatchProgress>();
   useEffect(() => {
     const task = window.setTimeout(() => {
     try {
+      if (localStorage.getItem("orun_low_bundles_v1") === "true") { setAutoplayTrailers(false); return; }
       const stored = localStorage.getItem("orun_settings_v1");
       if (!stored) return;
       const parsed = JSON.parse(stored) as { profile?: { autoplayTrailers?: boolean } };
-      if (typeof parsed.profile?.autoplayTrailers === "boolean") setAutoplayTrailers(parsed.profile.autoplayTrailers);
+      if (typeof parsed.profile?.autoplayTrailers === "boolean") setAutoplayTrailers(parsed.profile.autoplayTrailers && !(parsed.profile as { lowerBandwidth?: boolean }).lowerBandwidth);
     } catch { /* Invalid local preferences retain the safe default. */ }
     }, 0);
     return () => window.clearTimeout(task);
   }, []);
+  useEffect(() => {
+    const refresh = () => setProgress(readWatchHistory()[film.id]);
+    refresh();
+    window.addEventListener(WATCH_HISTORY_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(WATCH_HISTORY_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [film.id]);
+  const watchState = progress ? getWatchState(progress.positionSeconds, progress.durationSeconds) : "not-watched";
   const posterStyle = film.posterUrl ? { backgroundImage: `linear-gradient(to top,rgba(5,7,11,.96),rgba(5,7,11,.04) 72%),url(${film.posterUrl})` } : undefined;
 
   useEffect(() => {
@@ -72,6 +86,11 @@ export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
           <Link href={`/films/${film.slug}`} aria-label={`View ${film.title}`} className="absolute inset-0 z-10">
             <span className="sr-only">View {film.title}</span>
           </Link>
+          {watchState !== "not-watched" && (
+            <div className="absolute left-3 top-3 z-30 flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-black/75 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-md" title={watchState === "watched" ? "Watched" : `${progress?.completionPercent ?? 0}% watched`}>
+              <Eye size={14} aria-hidden="true" />{watchState === "watched" ? <><Check size={12} aria-hidden="true" /><span className="sr-only">Watched</span></> : <span>{progress?.completionPercent}%</span>}
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-x-4 bottom-5 z-20">
             <p className="mb-2 text-[10px] uppercase tracking-[.22em] text-amber">{previewing && film.youtubeId ? "Muted preview" : film.youtubeId ? "B28 Entertainment" : film.isOriginal ? "ORUN Original" : film.country}</p>
             <h3 className="font-display text-xl leading-tight md:text-2xl">{film.title}</h3>
@@ -91,6 +110,7 @@ export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
               <span className="grid h-12 w-12 place-items-center rounded-full bg-amber text-black"><Play size={18} fill="currentColor" /></span>
             </div>
           )}
+          {watchState === "in-progress" && progress && <div className="absolute inset-x-0 bottom-0 z-30 h-1 bg-white/15"><div className="h-full bg-amber" style={{ width: `${progress.completionPercent}%` }} /></div>}
         </div>
         <Link href={`/films/${film.slug}`} className="flex items-center justify-between px-3 py-3 text-xs text-white/55 hover:text-white" aria-label={`Open ${film.title} details`}>
           <span>{film.year} · {film.genres[0]}</span>
