@@ -1,33 +1,37 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect,useRef,useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Check, Eye, Play } from "lucide-react";
+import Image from "next/image";
+import { Check,Eye,Info,Play,Star,X } from "lucide-react";
 import type { Film } from "@/server/demo/catalog";
-import { getWatchState, readWatchHistory, WATCH_HISTORY_EVENT, type WatchProgress } from "@/lib/viewer/watch-history";
+import { getWatchState,readWatchHistory,WATCH_HISTORY_EVENT,type WatchProgress } from "@/lib/viewer/watch-history";
 import { TrailerDialog } from "./trailer-dialog";
+import { previewPosition } from "@/lib/viewer/preview-position";
+const gradients=["from-[#5a2d20] via-[#1c3148] to-[#07101a]","from-[#143a45] via-[#1c253f] to-[#080b12]","from-[#50381d] via-[#282330] to-[#07090e]","from-[#2b193d] via-[#122e45] to-[#06090e]","from-[#15372e] via-[#19253e] to-[#06080d]"];
+const previewEvent="orun:film-preview";
+type Position={left:number;top:number;width:number};
+function youtubeId(url:string){return url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=))([\w-]{6,})/)?.[1]??null}
 
-const gradients = ["from-[#5a2d20] via-[#1c3148] to-[#07101a]", "from-[#143a45] via-[#1c253f] to-[#080b12]", "from-[#50381d] via-[#282330] to-[#07090e]", "from-[#2b193d] via-[#122e45] to-[#06090e]", "from-[#15372e] via-[#19253e] to-[#06080d]"];
-
-export function FilmCard({ film, index = 0 }: { film: Film; index?: number }) {
-  const [progress, setProgress] = useState<WatchProgress>();
-  useEffect(() => {
-    const refresh = () => setProgress(readWatchHistory()[film.id]);
-    refresh(); window.addEventListener(WATCH_HISTORY_EVENT, refresh); window.addEventListener("storage", refresh);
-    return () => { window.removeEventListener(WATCH_HISTORY_EVENT, refresh); window.removeEventListener("storage", refresh); };
-  }, [film.id]);
-  const watchState = progress ? getWatchState(progress.positionSeconds, progress.durationSeconds) : "not-watched";
-  const posterStyle = film.posterUrl ? { backgroundImage: `linear-gradient(to top,rgba(5,7,11,.96),rgba(5,7,11,.04) 72%),url(${film.posterUrl})` } : undefined;
-  return <article className="group relative w-[44vw] min-w-[160px] max-w-[250px] flex-none overflow-hidden rounded-xl border border-white/8 bg-[#0b111b] shadow-2xl md:w-[19vw]">
-    <div className={`relative aspect-[2/3] bg-gradient-to-br bg-cover bg-center ${gradients[index % gradients.length]}`} style={posterStyle}>
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/15"/>
-      <Link href={`/films/${film.slug}`} aria-label={`View ${film.title}`} className="absolute inset-0 z-10"><span className="sr-only">View {film.title}</span></Link>
-      {watchState !== "not-watched" && <div className="absolute left-3 top-3 z-30 flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-black/75 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-md"><Eye size={14}/>{watchState === "watched" ? <Check size={12}/> : <span>{progress?.completionPercent}%</span>}</div>}
-      {film.trailerUrl && <div className="absolute right-3 top-3 z-30 [&_.glass-action]:min-h-10 [&_.glass-action]:px-3 [&_.glass-action]:py-1 [&_.glass-action]:text-xs"><TrailerDialog title={film.title} synopsis={film.synopsis} slug={film.slug} trailerUrl={film.trailerUrl} lowBandwidthUrl={film.trailerLowBandwidthUrl} duration={film.trailerDuration}/></div>}
-      <div className="pointer-events-none absolute inset-x-4 bottom-5 z-20"><p className="mb-2 text-[10px] uppercase tracking-[.22em] text-amber">{film.isOriginal ? "ORUN Original" : film.country}</p><h3 className="font-display text-xl leading-tight md:text-2xl">{film.title}</h3></div>
-      {!film.trailerUrl && <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100"><span className="grid h-12 w-12 place-items-center rounded-full bg-amber text-black"><Play size={18} fill="currentColor"/></span></div>}
-      {watchState === "in-progress" && progress && <div className="absolute inset-x-0 bottom-0 z-30 h-1 bg-white/15"><div className="h-full bg-amber" style={{ width: `${progress.completionPercent}%` }}/></div>}
-    </div>
-    <Link href={`/films/${film.slug}`} className="flex items-center justify-between px-3 py-3 text-xs text-white/55 hover:text-white"><span>{film.year} · {film.genres[0]}</span><strong className="text-amber">{film.score ? `${film.score.toFixed(1)} / 5` : "Not rated"}</strong></Link>
-  </article>;
+export function FilmCard({film,index=0}:{film:Film;index?:number}){
+ const[progress,setProgress]=useState<WatchProgress>(),[previewOpen,setPreviewOpen]=useState(false),[position,setPosition]=useState<Position>({left:12,top:12,width:380}),[allowMotion,setAllowMotion]=useState(false);
+ const cardRef=useRef<HTMLElement>(null),panelRef=useRef<HTMLDivElement>(null),openTimer=useRef<number|undefined>(undefined),closeTimer=useRef<number|undefined>(undefined);
+ useEffect(()=>{const refresh=()=>setProgress(readWatchHistory()[film.id]);refresh();window.addEventListener(WATCH_HISTORY_EVENT,refresh);window.addEventListener("storage",refresh);return()=>{window.removeEventListener(WATCH_HISTORY_EVENT,refresh);window.removeEventListener("storage",refresh)}},[film.id]);
+ useEffect(()=>{const task=window.setTimeout(()=>{try{const low=localStorage.getItem("orun_low_bundles_v1")==="true";const settings=JSON.parse(localStorage.getItem("orun_settings_v1")??"{}") as {profile?:{autoplayTrailers?:boolean;lowerBandwidth?:boolean}};setAllowMotion(!low&&!settings.profile?.lowerBandwidth&&settings.profile?.autoplayTrailers!==false)}catch{setAllowMotion(false)}},0);return()=>window.clearTimeout(task)},[]);
+ useEffect(()=>{const closeOther=(event:Event)=>{if((event as CustomEvent<string>).detail!==film.id)setPreviewOpen(false)};const close=()=>setPreviewOpen(false);window.addEventListener(previewEvent,closeOther);window.addEventListener("scroll",close,true);window.addEventListener("resize",close);return()=>{window.removeEventListener(previewEvent,closeOther);window.removeEventListener("scroll",close,true);window.removeEventListener("resize",close);if(openTimer.current)window.clearTimeout(openTimer.current);if(closeTimer.current)window.clearTimeout(closeTimer.current)}},[film.id]);
+ useEffect(()=>{if(!previewOpen)return;const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"){setPreviewOpen(false);cardRef.current?.querySelector<HTMLElement>("[data-preview-trigger]")?.focus()}};window.addEventListener("keydown",escape);return()=>window.removeEventListener("keydown",escape)},[previewOpen]);
+ const cancelClose=()=>{if(closeTimer.current)window.clearTimeout(closeTimer.current)};
+ const open=()=>{cancelClose();if(openTimer.current)window.clearTimeout(openTimer.current);openTimer.current=window.setTimeout(()=>{const rect=cardRef.current?.getBoundingClientRect();if(!rect)return;setPosition(previewPosition(rect,{width:window.innerWidth,height:window.innerHeight}));window.dispatchEvent(new CustomEvent(previewEvent,{detail:film.id}));setPreviewOpen(true)},400)};
+ const close=()=>{if(openTimer.current)window.clearTimeout(openTimer.current);closeTimer.current=window.setTimeout(()=>setPreviewOpen(false),160)};
+ const openNow=()=>{if(openTimer.current)window.clearTimeout(openTimer.current);const rect=cardRef.current?.getBoundingClientRect();if(rect)setPosition(previewPosition(rect,{width:window.innerWidth,height:window.innerHeight}));window.dispatchEvent(new CustomEvent(previewEvent,{detail:film.id}));setPreviewOpen(true)};
+ const watchState=progress?getWatchState(progress.positionSeconds,progress.durationSeconds):"not-watched";
+ const posterStyle=film.posterUrl?{backgroundImage:`linear-gradient(to top,rgba(5,7,11,.96),rgba(5,7,11,.04) 72%),url(${film.posterUrl})`}:undefined;
+ const yt=film.trailerUrl?youtubeId(film.trailerUrl):null;
+ return <><article ref={cardRef} className="group relative w-[44vw] min-w-[160px] max-w-[250px] flex-none overflow-hidden rounded-xl border border-white/8 bg-[#0b111b] shadow-2xl md:w-[19vw]" onMouseEnter={open} onMouseLeave={close} onFocusCapture={open} onBlurCapture={event=>{if(!panelRef.current?.contains(event.relatedTarget as Node))close()}}>
+  <div className={`relative aspect-[2/3] bg-gradient-to-br bg-cover bg-center ${gradients[index%gradients.length]}`} style={posterStyle}><div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/5 to-black/15"/><Link href={`/films/${film.slug}`} aria-label={`View ${film.title}`} className="absolute inset-0 z-10"><span className="sr-only">View {film.title}</span></Link>{watchState!=="not-watched"&&<div className="absolute left-3 top-3 z-30 flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 bg-black/75 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-md"><Eye size={14}/>{watchState==="watched"?<Check size={12}/>:<span>{progress?.completionPercent}%</span>}</div>}<button data-preview-trigger type="button" onClick={openNow} className="absolute right-3 top-3 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/75 text-white opacity-100 backdrop-blur transition hover:bg-amber hover:text-black md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100" aria-label={`Preview ${film.title}`} aria-expanded={previewOpen}><Info size={17}/></button><div className="pointer-events-none absolute inset-x-4 bottom-5 z-20"><p className="mb-2 text-[10px] uppercase tracking-[.22em] text-amber">{film.isOriginal?"ORUN Original":film.country}</p><h3 className="font-display text-xl leading-tight md:text-2xl">{film.title}</h3></div>{watchState==="in-progress"&&progress&&<div className="absolute inset-x-0 bottom-0 z-30 h-1 bg-white/15"><div className="h-full bg-amber" style={{width:`${progress.completionPercent}%`}}/></div>}</div>
+  <Link href={`/films/${film.slug}`} className="flex items-center justify-between px-3 py-3 text-xs text-white/55 hover:text-white"><span>{film.year} · {film.genres[0]}</span><strong className="text-amber">{film.score&&film.ratingCount?`${film.score.toFixed(1)} (${film.ratingCount})`:"Not rated"}</strong></Link>
+ </article>{previewOpen&&typeof document!=="undefined"&&createPortal(<div ref={panelRef} role="dialog" aria-label={`${film.title} preview`} className="fixed z-[110] overflow-hidden rounded-2xl border border-white/15 bg-[#090e17]/98 shadow-[0_25px_80px_rgba(0,0,0,.65)] backdrop-blur-xl animate-reveal" style={position} onMouseEnter={cancelClose} onMouseLeave={close}>
+  <div className="relative aspect-video overflow-hidden bg-[#0d2747]">{allowMotion&&yt?<iframe className="pointer-events-none h-full w-full" src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(yt)}?autoplay=1&mute=1&controls=0&playsinline=1&rel=0`} title={`${film.title} muted preview`} allow="autoplay; encrypted-media" tabIndex={-1}/>:film.posterUrl?<Image src={film.posterUrl} alt="" fill sizes="390px" unoptimized className="object-cover"/>:<div className="h-full w-full bg-gradient-to-br from-[#173758] to-black"/>}<div className="absolute inset-0 bg-gradient-to-t from-[#090e17] via-transparent to-transparent"/><button type="button" onClick={()=>setPreviewOpen(false)} className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-black/70" aria-label="Close preview"><X size={16}/></button></div>
+  <div className="p-5"><h3 className="font-display text-2xl">{film.title}</h3><p className="mt-1 text-xs text-white/45">{film.year}{film.runtime>0?` · ${film.runtime} min`:""} · {film.ageRating} · {film.videoQualities.join(" / ")}</p><p className="mt-3 line-clamp-3 text-sm leading-6 text-white/65">{film.synopsis}</p><p className="mt-3 text-xs text-amber">{film.genres.join(" · ")} <span className="text-white/30">/</span> {film.themes.slice(0,2).join(" · ")}</p><div className="mt-3 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider text-white/45"><span className="rounded-full bg-white/7 px-2.5 py-1">{film.access}</span>{film.score&&film.ratingCount&&<span className="flex items-center gap-1 rounded-full bg-white/7 px-2.5 py-1"><Star size={11} fill="currentColor" className="text-amber"/>{film.score.toFixed(1)} · {film.ratingCount}</span>}</div><div className="mt-5 flex flex-wrap gap-2"><Link href={`/watch/${film.id}`} className="primary-action"><Play size={16} fill="currentColor"/>Watch now</Link><Link href={`/films/${film.slug}`} className="glass-action">View details</Link>{film.trailerUrl&&<TrailerDialog title={film.title} synopsis={film.synopsis} slug={film.slug} trailerUrl={film.trailerUrl} lowBandwidthUrl={film.trailerLowBandwidthUrl} duration={film.trailerDuration} triggerLabel="Play trailer"/>}</div></div>
+ </div>,document.body)}</>
 }

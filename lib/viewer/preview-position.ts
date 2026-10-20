@@ -1,0 +1,2 @@
+export type PreviewRect={left:number;right:number;top:number};
+export function previewPosition(rect:PreviewRect,viewport:{width:number;height:number},preferredWidth=390,estimatedHeight=440){const width=Math.min(preferredWidth,viewport.width-24);let left=rect.right+12;if(left+width>viewport.width-12)left=rect.left-width-12;left=Math.max(12,Math.min(left,viewport.width-width-12));const top=Math.max(12,Math.min(rect.top-35,viewport.height-estimatedHeight-12));return{left,top,width}}

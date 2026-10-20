@@ -2,10 +2,14 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { assertRateLimit, assertSameOrigin } from "@/lib/security/request-guards";
 import { commentInput, feedbackError, requireViewer, resolvePublishedFilm } from "@/lib/film/feedback";
+import { currentAuthSession } from "@/lib/auth/session-cookie";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const film = await resolvePublishedFilm((await params).slug);
+    if (!film.commentsEnabled) return Response.json({ items: [], page: 1, hasMore: false, total: 0, enabled: false });
+    const session = await currentAuthSession();
+    const viewerProfileId = session?.user.profiles[0]?.id;
     const sort = request.nextUrl.searchParams.get("sort") ?? "newest";
     const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
     const take = 10;
@@ -23,9 +27,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     ]);
     const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
     return Response.json({
-      items: comments.map((comment) => ({ ...comment, author: profileMap.get(comment.profileId) ?? { name: "ORUN viewer", avatarUrl: null }, helpful: comment.helpfulCount, replies: replies.filter((reply) => reply.parentId === comment.id) })),
+      items: comments.map((comment) => ({ ...comment, own: comment.profileId === viewerProfileId, author: profileMap.get(comment.profileId) ?? { name: "ORUN viewer", avatarUrl: null }, helpful: comment.helpfulCount, replies: replies.filter((reply) => reply.parentId === comment.id) })),
       page,
       hasMore: page * take < total,
+      total,
+      enabled: true,
     });
   } catch (error) { return feedbackError(error); }
 }
@@ -36,6 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { session, profile } = await requireViewer();
     assertRateLimit(`comment:${session.user.id}`, 5, 60_000);
     const film = await resolvePublishedFilm((await params).slug);
+    if (!film.commentsEnabled) throw new Error("COMMENTS_DISABLED");
     const input = commentInput.parse(await request.json());
     const comment = await prisma.comment.create({ data: { filmId: film.id, profileId: profile.id, body: input.body } });
     return Response.json({ comment }, { status: 201 });

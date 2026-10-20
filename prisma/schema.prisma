@@ -389,6 +389,11 @@ model Film {
   trending Boolean @default(false)
   featured Boolean @default(false)
   privateMessagesEnabled Boolean @default(true)
+  commentsEnabled Boolean @default(true)
+  ratingsEnabled Boolean @default(true)
+  trailersEnabled Boolean @default(true)
+  heroOrder Int?
+  heroDisplaySeconds Int?
   purchaseAmount BigInt?
   rentalAmount BigInt?
   currency String? @db.VarChar(3)
@@ -400,6 +405,7 @@ model Film {
   @@index([status, publishedAt])
   @@index([status, year, id])
   @@index([status, trending, popularityScore])
+  @@index([featured, heroOrder])
   @@index([contentFormat, region])
 }
 model Series {

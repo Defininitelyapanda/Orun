@@ -29,6 +29,8 @@ export type Film = {
   addedAt: string;
   featured?: boolean;
   trending?: boolean;
+  heroOrder?: number;
+  heroDisplaySeconds?: number;
 };
 
 const youtubePoster = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;

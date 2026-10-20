@@ -43,7 +43,7 @@ export function feedbackError(error: unknown) {
     : ["FILM_NOT_FOUND", "COMMENT_NOT_FOUND"].includes(message) ? 404
       : message === "RATE_LIMITED" ? 429
         : ["INVALID_ORIGIN", "NOT_AUTHORIZED"].includes(message) ? 403
-          : ["PRIVATE_MESSAGES_DISABLED", "MESSAGING_UNAVAILABLE"].includes(message) ? 409
+          : ["PRIVATE_MESSAGES_DISABLED", "MESSAGING_UNAVAILABLE", "COMMENTS_DISABLED", "RATINGS_DISABLED", "TRAILERS_DISABLED"].includes(message) ? 409
             : 400;
   return Response.json({ error: message }, { status });
 }
