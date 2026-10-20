@@ -79,6 +79,8 @@ enum MediaStatus {
   FAILED
 }
 enum AdminRoleName {
+  OWNER
+  TECHNICAL_ADMIN
   SUPER_ADMIN
   CONTENT_ADMIN
   EDITOR
@@ -86,6 +88,7 @@ enum AdminRoleName {
   FINANCE
   ANALYST
   SUPPORT
+  CUSTOMER_SUPPORT
 }
 enum DataRequestStatus {
   REQUESTED
@@ -1015,6 +1018,7 @@ model AdminUser {
   userId String @unique
   totpSecretEncrypted String?
   twoFactorVerifiedAt DateTime?
+  lastSensitiveAuthAt DateTime?
   active Boolean @default(true)
   roles AdminUserRole[]
 }
@@ -1037,11 +1041,19 @@ model AuditLog {
   action String
   targetType String
   targetId String?
+  outcome String @default("SUCCEEDED")
+  reason String?
+  requestId String?
+  correlationId String?
   ipHash String?
   before Json?
   after Json?
+  metadata Json?
   createdAt DateTime @default(now())
   @@index([targetType, targetId])
+  @@index([adminUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([correlationId])
 }
 model PlatformSetting {
   key String @id

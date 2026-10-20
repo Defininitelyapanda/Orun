@@ -16,6 +16,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "admin:bootstrap": "tsx scripts/bootstrap-owner.ts",
     "worker:media": "tsx server/workers/media-worker.ts",
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build",

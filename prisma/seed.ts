@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { AdminRoleName, PrismaClient } from "@prisma/client";
 import { Pbkdf2PasswordHasher } from "../lib/auth/passwords";
+import { rolePermissions } from "../lib/auth/permissions";
 import { films } from "../server/demo/catalog";
 import { canonicalGenres, contentFormats, genreGroups, genreSynonyms, storyThemes, taxonomySlug, tones } from "../lib/taxonomy/catalog";
 const db=new PrismaClient();
@@ -7,6 +8,9 @@ async function main(){
  if(process.env.NODE_ENV==="production"&&process.env.DEMO_MODE==="true")throw new Error("Demo seed is disabled in production");
  const plans=[{code:"STUDENT",name:"ORUN Student",priceAmount:BigInt(20000),maxQuality:480,maxProfiles:1,maxStreams:1,downloadsEnabled:false},{code:"ESSENTIAL",name:"ORUN Essential",priceAmount:BigInt(35000),maxQuality:720,maxProfiles:2,maxStreams:1,downloadsEnabled:true},{code:"PREMIUM",name:"ORUN Premium",priceAmount:BigInt(50000),maxQuality:1080,maxProfiles:4,maxStreams:2,downloadsEnabled:true},{code:"BLACK",name:"ORUN Black",priceAmount:BigInt(70000),maxQuality:2160,maxProfiles:6,maxStreams:4,downloadsEnabled:true}];
  for(const plan of plans)await db.subscriptionPlan.upsert({where:{code:plan.code},update:plan,create:{...plan,currency:"KES",audioQuality:"HIGH",benefits:{earlyReleases:plan.code==="BLACK",exclusiveContent:true}}});
+ for(const [name,permissions] of Object.entries(rolePermissions))await db.adminRole.upsert({where:{name:name as AdminRoleName},update:{permissions:[...permissions]},create:{name:name as AdminRoleName,permissions:[...permissions]}});
+ await db.platformSetting.upsert({where:{key:"auth.publicRegistration"},update:{},create:{key:"auth.publicRegistration",value:true}});
+ await db.platformSetting.upsert({where:{key:"security.adminMfaRequired"},update:{},create:{key:"security.adminMfaRequired",value:false}});
  const genreRows=new Map<string,string>(),themeRows=new Map<string,string>(),toneRows=new Map<string,string>(),formatRows=new Map<string,string>(),groupRows=new Map<string,string>();
  for(const [index,group] of genreGroups.entries()){const row=await db.genre.upsert({where:{slug:group.slug},update:{name:group.name,description:group.description,parentId:null,active:true,publicVisible:true,sortOrder:index},create:{slug:group.slug,name:group.name,description:group.description,active:true,publicVisible:true,sortOrder:index}});groupRows.set(group.slug,row.id);genreRows.set(group.name,row.id)}
  for(const [index,genre] of canonicalGenres.entries()){const parentId=groupRows.get(genre.groupSlug);if(genre.slug===genre.groupSlug){genreRows.set(genre.name,parentId!);continue}const row=await db.genre.upsert({where:{slug:genre.slug},update:{name:genre.name,parentId,active:true,publicVisible:true,sortOrder:index,synonyms:[...(genreSynonyms[genre.slug]??[])]},create:{slug:genre.slug,name:genre.name,parentId,sortOrder:index,synonyms:[...(genreSynonyms[genre.slug]??[])]}});genreRows.set(genre.name,row.id)}
