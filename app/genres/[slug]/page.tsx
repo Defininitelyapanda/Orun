@@ -1,0 +1,21 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AppShell } from "@/components/navigation/app-shell";
+import { CatalogGrid } from "@/components/film/catalog-grid";
+import { FilmRow } from "@/components/film/film-row";
+import { filterAndSortCatalog,type CatalogQuery } from "@/lib/catalog/discovery";
+import { canonicalGenres,genreGroups } from "@/lib/taxonomy/catalog";
+import { films } from "@/server/demo/catalog";
+
+export function generateStaticParams(){return[...genreGroups.map(item=>({slug:item.slug})),...canonicalGenres.map(item=>({slug:item.slug}))]}
+
+export default async function GenrePage({params,searchParams}:{params:Promise<{slug:string}>;searchParams:Promise<CatalogQuery>}){
+ const{slug}=await params,query=await searchParams;const group=genreGroups.find(item=>item.slug===slug);const genre=canonicalGenres.find(item=>item.slug===slug);if(!group&&!genre)notFound();const name=group?.name??genre!.name,description=group?.description??`Discover ${name.toLowerCase()} from across African and international cinema.`;const accepted=new Set(group?.genres??[genre!.name]);const matching=films.filter(film=>film.genres.some(value=>accepted.has(value)));const sorted=filterAndSortCatalog(matching,query);const page=Math.max(1,Number(query.page)||1),pageSize=12,items=sorted.slice((page-1)*pageSize,page*pageSize);const featured=matching.filter(film=>film.featured).slice(0,6),trending=matching.filter(film=>film.trending).sort((a,b)=>b.popularity-a.popularity).slice(0,6),recent=[...matching].sort((a,b)=>b.addedAt.localeCompare(a.addedAt)).slice(0,6);const subgenres=group?.genres??genreGroups.find(item=>item.slug===genre?.groupSlug)?.genres??[];
+ return <AppShell>
+  <nav className="mb-5 text-xs text-white/40"><Link href="/discover" className="hover:text-amber">Browse</Link><span className="mx-2">/</span>{name}</nav><p className="eyebrow">Genre collection</p><h1 className="font-display text-4xl md:text-6xl">{name}</h1><p className="mt-4 max-w-3xl text-base leading-7 text-white/60">{description}</p>
+  {subgenres.length>1&&<section className="mt-8"><h2 className="text-xs font-bold uppercase tracking-[.2em] text-white/40">Explore subgenres</h2><div className="mt-3 flex gap-2 overflow-x-auto pb-2">{subgenres.map(value=>{const item=canonicalGenres.find(candidate=>candidate.name===value);return <Link key={value} href={item?`/genres/${item.slug}`:`/discover?genre=${encodeURIComponent(value)}`} className="mood-chip shrink-0">{value}</Link>})}</div></section>}
+  {featured.length>0&&<div className="mt-10"><FilmRow title={`Featured ${name}`} films={featured}/></div>}{trending.length>0&&<FilmRow title="Trending now" films={trending}/>} {recent.length>0&&<FilmRow title="Recently added" films={recent}/>} 
+  <section className="mt-12"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="eyebrow">Full collection</p><h2 className="font-display text-3xl">All {name}</h2></div><form method="get" className="flex gap-2"><select name="sort" defaultValue={query.sort??"recommended"} aria-label="Sort titles" className="min-h-11 rounded-xl border border-white/10 bg-[#0b121c] px-3 text-sm"><option value="recommended">Recommended</option><option value="trending">Trending</option><option value="popular">Most Popular</option><option value="recently-added">Recently Added</option><option value="year">Release Year</option><option value="alphabetical">Alphabetical</option><option value="shortest">Shortest Runtime</option><option value="longest">Longest Runtime</option></select><button className="glass-action" type="submit">Sort</button></form></div><div className="mt-6">{items.length?<CatalogGrid items={items}/>:<div className="rounded-2xl border border-white/10 bg-white/[.035] p-10 text-center text-white/45">No published titles are currently available in this classification.</div>}</div></section>
+  {sorted.length>pageSize&&<nav className="mt-8 flex justify-center gap-3"><span className="text-sm text-white/45">Page {page} of {Math.ceil(sorted.length/pageSize)}</span>{page*pageSize<sorted.length&&<Link className="glass-action" href={`/genres/${slug}?sort=${query.sort??"recommended"}&page=${page+1}`}>Next</Link>}</nav>}
+ </AppShell>
+}

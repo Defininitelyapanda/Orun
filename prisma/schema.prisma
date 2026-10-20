@@ -382,8 +382,19 @@ model Film {
   isShort Boolean @default(false)
   contentFormat String @default("FEATURE_FILM")
   region String?
+  culturalContext String?
+  filmingLocations String[] @default([])
+  productionStatus String @default("RELEASED")
+  productionCompany String?
+  originalReleaseDate DateTime?
+  awards String[] @default([])
+  festivalSelections String[] @default([])
+  aspectRatio String?
   dubbedLanguages String[] @default([])
   subtitleLanguages String[] @default([])
+  closedCaptions Boolean @default(false)
+  audioDescription Boolean @default(false)
+  signLanguageInterpretation Boolean @default(false)
   videoQualities String[] @default([])
   popularityScore Float @default(0)
   trending Boolean @default(false)
@@ -435,20 +446,42 @@ model Genre {
   id String @id @default(cuid())
   slug String @unique
   name String @unique
+  description String?
+  parentId String?
+  localizedNames Json?
+  synonyms String[] @default([])
+  recommendationTags String[] @default([])
   active Boolean @default(true)
+  publicVisible Boolean @default(true)
+  featured Boolean @default(false)
+  artworkUrl String?
+  archivedAt DateTime?
+  mergedIntoId String?
   sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([parentId, active, publicVisible, sortOrder])
+  @@index([featured, active, sortOrder])
 }
 model FilmGenre {
   filmId String
   genreId String
+  isPrimary Boolean @default(false)
+  source String @default("EDITORIAL")
+  reviewStatus String @default("APPROVED")
+  createdAt DateTime @default(now())
   @@id([filmId, genreId])
   @@index([genreId, filmId])
+  @@index([filmId, isPrimary])
 }
 model StoryTheme {
   id String @id @default(cuid())
   slug String @unique
   name String @unique
+  description String?
+  synonyms String[] @default([])
   active Boolean @default(true)
+  publicVisible Boolean @default(true)
   sortOrder Int @default(0)
 }
 model FilmStoryTheme {
@@ -456,6 +489,84 @@ model FilmStoryTheme {
   themeId String
   @@id([filmId, themeId])
   @@index([themeId, filmId])
+}
+model Tone {
+  id String @id @default(cuid())
+  slug String @unique
+  name String @unique
+  description String?
+  active Boolean @default(true)
+  publicVisible Boolean @default(true)
+  sortOrder Int @default(0)
+}
+model FilmTone {
+  filmId String
+  toneId String
+  @@id([filmId, toneId])
+  @@index([toneId, filmId])
+}
+model ContentFormatTaxon {
+  id String @id @default(cuid())
+  slug String @unique
+  name String @unique
+  description String?
+  active Boolean @default(true)
+  publicVisible Boolean @default(true)
+  sortOrder Int @default(0)
+}
+model FilmFormat {
+  filmId String
+  formatId String
+  isPrimary Boolean @default(false)
+  @@id([filmId, formatId])
+  @@index([formatId, filmId])
+  @@index([filmId, isPrimary])
+}
+model FilmCountry {
+  filmId String
+  countryId String
+  isPrimary Boolean @default(false)
+  @@id([filmId, countryId])
+  @@index([countryId, filmId])
+}
+model FilmLanguage {
+  filmId String
+  languageId String
+  kind String
+  isOriginal Boolean @default(false)
+  @@id([filmId, languageId, kind])
+  @@index([languageId, kind, filmId])
+}
+model ClassificationSystem {
+  id String @id @default(cuid())
+  code String @unique
+  name String
+  territoryCode String? @db.VarChar(2)
+  labels Json
+  active Boolean @default(true)
+}
+model FilmAudienceClassification {
+  filmId String
+  systemId String
+  label String
+  advisories String[] @default([])
+  @@id([filmId, systemId])
+  @@index([systemId, label, filmId])
+}
+model ClassificationSuggestion {
+  id String @id @default(cuid())
+  filmId String
+  userId String
+  kind String
+  valueId String
+  isPrimary Boolean @default(false)
+  status String @default("PENDING")
+  moderationNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([filmId, userId, kind, valueId])
+  @@index([status, createdAt])
+  @@index([filmId, status])
 }
 model FilmCreatorRecipient {
   filmId String @id
