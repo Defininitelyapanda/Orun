@@ -380,6 +380,15 @@ model Film {
   access ContentAccess @default(PREMIUM)
   isOriginal Boolean @default(false)
   isShort Boolean @default(false)
+  contentFormat String @default("FEATURE_FILM")
+  region String?
+  dubbedLanguages String[] @default([])
+  subtitleLanguages String[] @default([])
+  videoQualities String[] @default([])
+  popularityScore Float @default(0)
+  trending Boolean @default(false)
+  featured Boolean @default(false)
+  privateMessagesEnabled Boolean @default(true)
   purchaseAmount BigInt?
   rentalAmount BigInt?
   currency String? @db.VarChar(3)
@@ -389,6 +398,9 @@ model Film {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([status, publishedAt])
+  @@index([status, year, id])
+  @@index([status, trending, popularityScore])
+  @@index([contentFormat, region])
 }
 model Series {
   id String @id @default(cuid())
@@ -417,11 +429,35 @@ model Genre {
   id String @id @default(cuid())
   slug String @unique
   name String @unique
+  active Boolean @default(true)
+  sortOrder Int @default(0)
 }
 model FilmGenre {
   filmId String
   genreId String
   @@id([filmId, genreId])
+  @@index([genreId, filmId])
+}
+model StoryTheme {
+  id String @id @default(cuid())
+  slug String @unique
+  name String @unique
+  active Boolean @default(true)
+  sortOrder Int @default(0)
+}
+model FilmStoryTheme {
+  filmId String
+  themeId String
+  @@id([filmId, themeId])
+  @@index([themeId, filmId])
+}
+model FilmCreatorRecipient {
+  filmId String @id
+  userId String
+  privateMessagesEnabled Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId, filmId])
 }
 model Collection {
   id String @id @default(cuid())
@@ -541,6 +577,16 @@ model Rating {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([profileId, filmId])
+  @@index([filmId, active, value])
+}
+model FilmRatingAggregate {
+  filmId String @id
+  average Float @default(0)
+  count Int @default(0)
+  distribution Json
+  bayesianScore Float @default(0)
+  updatedAt DateTime @updatedAt
+  @@index([bayesianScore, count])
 }
 model Review {
   id String @id @default(cuid())
@@ -560,8 +606,13 @@ model Comment {
   body String
   status String @default("PUBLISHED")
   pinned Boolean @default(false)
+  creatorReply Boolean @default(false)
+  helpfulCount Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([filmId, status, createdAt])
+  @@index([filmId, status, helpfulCount, createdAt])
+  @@index([parentId, status, createdAt])
 }
 model CommentReply {
   id String @id @default(cuid())
@@ -585,6 +636,51 @@ model CommentReport {
   status String @default("OPEN")
   moderationNote String?
   createdAt DateTime @default(now())
+}
+model CreatorConversation {
+  id String @id @default(cuid())
+  filmId String
+  senderProfileId String
+  recipientUserId String
+  senderArchivedAt DateTime?
+  recipientArchivedAt DateTime?
+  senderReadAt DateTime?
+  recipientReadAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages CreatorMessage[]
+  @@unique([filmId, senderProfileId, recipientUserId])
+  @@index([recipientUserId, recipientArchivedAt, updatedAt])
+  @@index([senderProfileId, senderArchivedAt, updatedAt])
+}
+model CreatorMessage {
+  id String @id @default(cuid())
+  conversationId String
+  senderUserId String
+  body String
+  status String @default("VISIBLE")
+  createdAt DateTime @default(now())
+  conversation CreatorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@index([conversationId, createdAt])
+}
+model UserBlock {
+  blockerUserId String
+  blockedUserId String
+  createdAt DateTime @default(now())
+  @@id([blockerUserId, blockedUserId])
+}
+model TrailerAsset {
+  id String @id @default(cuid())
+  filmId String
+  url String
+  thumbnailUrl String?
+  languageCode String @default("en")
+  durationSeconds Int?
+  available Boolean @default(true)
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([filmId, available, approvedAt])
 }
 
 model Device {

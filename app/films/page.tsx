@@ -1,1 +1,3 @@
-import{AppShell}from"@/components/navigation/app-shell";import{CatalogGrid}from"@/components/film/catalog-grid";import{films}from"@/server/demo/catalog";export const metadata={title:"Films"};export default function FilmsPage(){return <AppShell><p className="eyebrow">The ORUN archive</p><div className="mb-10 flex items-end justify-between"><div><h1 className="font-display text-4xl md:text-6xl">Films</h1><p className="mt-3 max-w-xl text-white/55">Stories made across the continent and beyond, selected with care.</p></div><select aria-label="Sort films" className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 md:block"><option>Featured</option><option>Newest</option><option>Highest rated</option></select></div><CatalogGrid items={films}/></AppShell>}
+import { redirect } from "next/navigation";
+export const metadata={title:"Films"};
+export default function FilmsPage(){redirect("/discover")}
