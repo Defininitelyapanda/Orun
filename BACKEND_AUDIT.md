@@ -18,7 +18,7 @@ Audit date: 2026-10-20. This document records observed repository state and the 
 | User accounts and profiles | Functional foundation | Persistent sessions, profiles, password reset and preferences exist. Distributed throttling and full MFA/passkey journeys remain incomplete. |
 | Catalogue and taxonomy | Functional foundation | Persistent films, series, genres, themes, tones and classifications exist. Some user-facing surfaces still consume the demo catalogue. |
 | Admin access | Foundation implemented | `/admin` is now server-protected and roles map to central permissions. MFA enforcement UI and per-screen permission guards remain. |
-| Admin dashboard | Functional foundation | Reads live database counts and audit activity; fails closed to an unavailable state and shows no invented values. |
+| Admin dashboard | Functional foundation | Reads live database counts and audit activity; fails closed to an unavailable state and shows no invented values. Nested operational inventories and permission-scoped global search are implemented. |
 | Playback authorization | Functional foundation | Uses the authenticated session, profile ownership, entitlement state, media readiness, stream count and device ownership. Rights windows and geographic availability require dedicated data models. |
 | Payments | Partial | Provider verification and idempotent webhook processing exist. Reconciliation, disputes, payout operations and complete control-centre workflows remain. |
 | Media pipeline | Partial | Queue and worker foundations exist. Production worker topology, malware scanning, DRM, observability and recovery drills remain. |

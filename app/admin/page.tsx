@@ -1,12 +1,7 @@
 import { Activity,Clapperboard,CreditCard,DollarSign,Users } from "lucide-react";
 import { redirect } from "next/navigation";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { AdminModerationQueue,AdminUpgradeControls } from "@/components/admin/upgrade-controls";
-import { TaxonomyManager } from "@/components/admin/taxonomy-manager";
-import { ClassificationEditor } from "@/components/taxonomy/classification-editor";
 import { requireAdmin } from "@/lib/auth/admin";
 import { prisma } from "@/lib/db/prisma";
-import { films } from "@/server/demo/catalog";
 
 export const metadata={title:"Administration"};
 type Metric={label:string;value:string;Icon:typeof Users};
@@ -34,16 +29,11 @@ async function dashboardData(start:Date,end:Date){
  }catch(error){console.error("Admin dashboard query failed",error instanceof Error?error.message:"UNKNOWN");return{available:false,metrics:[] as Metric[],operations:null,recent:[]};}
 }
 
-export default async function Admin({searchParams}:{searchParams:Promise<{view?:string;from?:string;to?:string}>}){
+export default async function Admin({searchParams}:{searchParams:Promise<{from?:string;to?:string}>}){
  const params=await searchParams;
- let access:Awaited<ReturnType<typeof requireAdmin>>;
- try{access=await requireAdmin()}catch{redirect("/auth/login?next=/admin")}
- const{session,admin}=access,controls=params.view==="films"||params.view==="content",moderation=params.view==="comments",taxonomy=params.view==="taxonomy";
- const title=taxonomy?"Taxonomy manager":controls?"Catalogue controls":moderation?"Comment moderation":"Control centre";
- const range=dateRange(params.from,params.to),data=await dashboardData(range.start,range.end),initials=session.user.name.split(/\s+/).map(part=>part[0]).join("").slice(0,2).toUpperCase();
- return <main className="flex min-h-screen bg-[#05070b]"><AdminSidebar/><section className="min-w-0 flex-1 p-5 md:p-10"><header className="flex items-center justify-between"><div><p className="eyebrow">ORUN operations</p><h1 className="font-display text-3xl md:text-4xl">{title}</h1><p className="mt-2 text-xs text-white/40">Signed in as {session.user.email} · {admin.roles.map(item=>item.role.name).join(", ")}</p></div><div className="grid h-10 w-10 place-items-center rounded-full bg-amber/15 text-xs text-amber">{initials}</div></header>
-  {taxonomy?<div className="mt-10"><TaxonomyManager/></div>:controls?<div className="mt-10 space-y-6"><AdminUpgradeControls films={films}/><ClassificationEditor films={films} mode="admin"/></div>:moderation?<div className="mt-10"><AdminModerationQueue/></div>:<Dashboard data={data} start={range.start} end={range.end}/>}
- </section></main>;
+ try{await requireAdmin()}catch{redirect("/auth/login?next=/admin")}
+ const range=dateRange(params.from,params.to),data=await dashboardData(range.start,range.end);
+ return <><div className="mt-8"><p className="eyebrow">Overview</p><h1 className="font-display text-3xl md:text-4xl">Control centre</h1><p className="mt-2 max-w-2xl text-sm text-white/45">Live operational state across members, catalogue, commerce, moderation and media.</p></div><Dashboard data={data} start={range.start} end={range.end}/></>;
 }
 
 function Dashboard({data,start,end}:{data:Awaited<ReturnType<typeof dashboardData>>;start:Date;end:Date}){
