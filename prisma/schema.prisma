@@ -104,6 +104,23 @@ enum MediaStatus {
   READY
   FAILED
 }
+enum MediaScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+}
+enum IngestionJobStatus {
+  QUEUED
+  LEASED
+  SCANNING
+  TRANSCODING
+  PACKAGING
+  READY
+  RETRY_WAIT
+  DEAD_LETTER
+  CANCELLED
+}
 enum AdminRoleName {
   OWNER
   TECHNICAL_ADMIN
@@ -657,6 +674,8 @@ model MediaAsset {
   processingProgress Int @default(0)
   metadata Json?
   errorMessage String?
+  scanStatus MediaScanStatus @default(PENDING)
+  quarantinedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -1185,14 +1204,45 @@ model PlatformSetting {
   updatedAt DateTime @updatedAt
 }
 model IngestionJob {
-  id String @id @default(cuid())
-  mediaAssetId String
-  sourceType String
-  sourceUrl String?
-  status MediaStatus @default(UPLOADED)
-  progress Int @default(0)
-  attempts Int @default(0)
-  error String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String             @id @default(cuid())
+  mediaAssetId   String
+  sourceType     String
+  sourceUrl      String?
+  status         IngestionJobStatus @default(QUEUED)
+  stage          String             @default("QUEUED")
+  progress       Int                @default(0)
+  priority       Int                @default(0)
+  attempts       Int                @default(0)
+  maxAttempts    Int                @default(5)
+  queueJobId     String?            @unique
+  leaseOwner     String?
+  leaseExpiresAt DateTime?
+  heartbeatAt    DateTime?
+  nextAttemptAt  DateTime?
+  deadLetteredAt DateTime?
+  completedAt    DateTime?
+  inputChecksum  String?
+  outputManifest Json?
+  error          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  attemptsLog    IngestionAttempt[]
+  @@index([status, nextAttemptAt, priority])
+  @@index([mediaAssetId, createdAt])
+}
+model IngestionAttempt {
+  id           String   @id @default(cuid())
+  ingestionJobId String
+  attempt      Int
+  workerId     String
+  stage        String
+  startedAt    DateTime @default(now())
+  heartbeatAt  DateTime @default(now())
+  finishedAt   DateTime?
+  outcome      String?
+  error        String?
+  metadata     Json?
+  ingestionJob IngestionJob @relation(fields: [ingestionJobId], references: [id], onDelete: Cascade)
+  @@unique([ingestionJobId, attempt])
+  @@index([workerId, finishedAt])
 }
