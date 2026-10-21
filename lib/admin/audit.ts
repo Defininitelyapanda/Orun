@@ -13,6 +13,6 @@ export function auditRequestContext(request:Request){
  return{requestId:request.headers.get("cf-ray")??request.headers.get("x-request-id")??randomUUID(),correlationId:request.headers.get("x-correlation-id")??undefined,ipHash:address?createHash("sha256").update(address).digest("hex"):undefined};
 }
 
-export async function appendAuditLog(db:PrismaClient,input:{adminUserId?:string;action:string;targetType:string;targetId?:string;outcome?:string;reason?:string;before?:unknown;after?:unknown;metadata?:unknown;requestId?:string;correlationId?:string;ipHash?:string}){
+export async function appendAuditLog(db:Pick<PrismaClient,"auditLog">,input:{adminUserId?:string;action:string;targetType:string;targetId?:string;outcome?:string;reason?:string;before?:unknown;after?:unknown;metadata?:unknown;requestId?:string;correlationId?:string;ipHash?:string}){
  return db.auditLog.create({data:{...input,before:redact(input.before) as Prisma.InputJsonValue|undefined,after:redact(input.after) as Prisma.InputJsonValue|undefined,metadata:redact(input.metadata) as Prisma.InputJsonValue|undefined}});
 }

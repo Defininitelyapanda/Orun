@@ -1,0 +1,18 @@
+const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+const bytesToBase64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/g,"");
+const base64ToBytes=(value:string)=>Uint8Array.from(atob(value.replaceAll("-","+").replaceAll("_","/").padEnd(Math.ceil(value.length/4)*4,"=")),character=>character.charCodeAt(0));
+
+function base32Encode(bytes:Uint8Array){let bits=0,value=0,result="";for(const byte of bytes){value=(value<<8)|byte;bits+=8;while(bits>=5){result+=alphabet[(value>>>(bits-5))&31];bits-=5}}if(bits>0)result+=alphabet[(value<<(5-bits))&31];return result}
+function base32Decode(input:string){let bits=0,value=0;const output:number[]=[];for(const character of input.replace(/=|\s|-/g,"").toUpperCase()){const index=alphabet.indexOf(character);if(index<0)throw new Error("INVALID_MFA_SECRET");value=(value<<5)|index;bits+=5;if(bits>=8){output.push((value>>>(bits-8))&255);bits-=8}}return new Uint8Array(output)}
+async function encryptionKey(){const source=process.env.ADMIN_MFA_ENCRYPTION_KEY;if(!source||source.length<32)throw new Error("ADMIN_MFA_NOT_CONFIGURED");const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(source));return crypto.subtle.importKey("raw",digest,"AES-GCM",false,["encrypt","decrypt"])}
+
+export function createTotpSecret(){const bytes=new Uint8Array(20);crypto.getRandomValues(bytes);return base32Encode(bytes)}
+export function totpUri(secret:string,email:string){return `otpauth://totp/${encodeURIComponent(`ORUN:${email}`)}?secret=${secret}&issuer=ORUN&algorithm=SHA1&digits=6&period=30`}
+export async function encryptTotpSecret(secret:string){const iv=new Uint8Array(12);crypto.getRandomValues(iv);const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},await encryptionKey(),new TextEncoder().encode(secret));return`${bytesToBase64(iv)}.${bytesToBase64(new Uint8Array(encrypted))}`}
+export async function decryptTotpSecret(payload:string){const[iv,cipher]=payload.split(".");if(!iv||!cipher)throw new Error("INVALID_MFA_SECRET");const decrypted=await crypto.subtle.decrypt({name:"AES-GCM",iv:base64ToBytes(iv)},await encryptionKey(),base64ToBytes(cipher));return new TextDecoder().decode(decrypted)}
+
+async function totpAt(secret:string,time:number){const counter=Math.floor(time/30_000),message=new Uint8Array(8);let remaining=BigInt(counter);for(let index=7;index>=0;index--){message[index]=Number(remaining&255n);remaining>>=8n}const key=await crypto.subtle.importKey("raw",base32Decode(secret),{name:"HMAC",hash:"SHA-1"},false,["sign"]),signature=new Uint8Array(await crypto.subtle.sign("HMAC",key,message)),offset=signature[signature.length-1]!&15,binary=((signature[offset]!&127)<<24)|(signature[offset+1]!<<16)|(signature[offset+2]!<<8)|signature[offset+3]!;return String(binary%1_000_000).padStart(6,"0")}
+export async function verifyTotp(secret:string,code:string,now=Date.now()){if(!/^\d{6}$/.test(code))return false;for(const drift of[-1,0,1])if(await totpAt(secret,now+drift*30_000)===code)return true;return false}
+
+export function createRecoveryCodes(count=8){return Array.from({length:count},()=>{const bytes=new Uint8Array(8);crypto.getRandomValues(bytes);const text=Array.from(bytes,byte=>byte.toString(16).padStart(2,"0")).join("").toUpperCase();return`${text.slice(0,4)}-${text.slice(4,8)}-${text.slice(8,12)}-${text.slice(12)}`})}
+export async function hashRecoveryCode(code:string){const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(code.replaceAll("-","").toUpperCase()));return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,"0")).join("")}

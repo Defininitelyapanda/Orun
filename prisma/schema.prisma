@@ -149,6 +149,7 @@ model Session {
   lastSeenAt DateTime @default(now())
   ipHash String?
   userAgent String?
+  mfaVerifiedAt DateTime?
   revokedAt DateTime?
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -1021,6 +1022,16 @@ model AdminUser {
   lastSensitiveAuthAt DateTime?
   active Boolean @default(true)
   roles AdminUserRole[]
+  recoveryCodes AdminMfaRecoveryCode[]
+}
+model AdminMfaRecoveryCode {
+  id String @id @default(cuid())
+  adminUserId String
+  codeHash String @unique
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  @@index([adminUserId, usedAt])
 }
 model AdminRole {
   id String @id @default(cuid())

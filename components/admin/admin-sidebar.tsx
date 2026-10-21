@@ -4,7 +4,7 @@ import { Activity,BarChart3,Clapperboard,CreditCard,Film,LayoutDashboard,Message
 import { anyRoleAllows } from "@/lib/auth/permissions";
 
 const items=[
- ["Dashboard",LayoutDashboard,"/admin",null],["Content",Clapperboard,"/admin/content","catalog:read"],["Taxonomy",Tags,"/admin/taxonomy","catalog:read"],["Users",Users,"/admin/users","users:read"],["Payments",CreditCard,"/admin/payments","payments:read"],["Media",Film,"/admin/media","media:read"],["Analytics",BarChart3,"/admin/analytics","analytics:read"],["Moderation",MessageSquare,"/admin/moderation","moderation:read"],["Audit",Shield,"/admin/audit","audit:read"],["Settings",Settings,"/admin/settings","settings:read"],["System",Activity,"/admin/system","system:read"],
+ ["Dashboard",LayoutDashboard,"/admin",null],["Content",Clapperboard,"/admin/content","catalog:read"],["Taxonomy",Tags,"/admin/taxonomy","catalog:read"],["Users",Users,"/admin/users","users:read"],["Payments",CreditCard,"/admin/payments","payments:read"],["Media",Film,"/admin/media","media:read"],["Analytics",BarChart3,"/admin/analytics","analytics:read"],["Moderation",MessageSquare,"/admin/moderation","moderation:read"],["Audit",Shield,"/admin/audit","audit:read"],["Security",Shield,"/admin/security","security:read"],["Settings",Settings,"/admin/settings","settings:read"],["System",Activity,"/admin/system","system:read"],
 ] as const;
 
 export function AdminSidebar({roles}:{roles:readonly AdminRoleName[]}){
