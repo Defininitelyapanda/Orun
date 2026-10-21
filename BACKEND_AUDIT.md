@@ -22,7 +22,7 @@ Audit date: 2026-10-20. This document records observed repository state and the 
 | Playback authorization | Functional foundation | Uses the authenticated session, profile ownership, entitlement state, media readiness, stream count and device ownership. Rights windows and geographic availability require dedicated data models. |
 | Payments | Partial | Provider verification and idempotent webhook processing exist. Reconciliation, disputes, payout operations and complete control-centre workflows remain. |
 | Media pipeline | Partial | Queue and worker foundations exist. Production worker topology, malware scanning, DRM, observability and recovery drills remain. |
-| CMS | Partial | Pages, navigation, homepage sections and banners exist. Revision history, preview tokens, scheduling, redirects and approval workflows remain. |
+| CMS | Functional foundation | Pages now have immutable revisions, draft/review/approval transitions, hashed expiring preview tokens, MFA-gated publish/schedule operations, a secret-authenticated due-publication worker endpoint and redirect records. Provider cron configuration, redirect request integration and a richer visual page builder remain. |
 | Audit | Foundation implemented | Structured fields and append-only database trigger are added. Existing mutation routes still need systematic instrumentation. |
 | Backups and disaster recovery | Missing operational proof | The application cannot validate provider backups, PITR, restore drills, RPO or RTO from source code alone. |
 
@@ -53,8 +53,8 @@ Sensitive actions must additionally require MFA and recent authentication. The s
 
 1. Foundation and critical security: configuration validation, admin gate, permissions, audit immutability, auth throttling, real playback authorization, live dashboard.
 2. Control-centre routing and design system: nested routes, permission-aware navigation, global search, tables, filters and safe bulk actions.
-3. Identity and user operations: admin MFA/enrolment, recent-auth challenges, session/device revocation and privacy workflows.
-4. Catalogue, taxonomy and CMS: revisioning, previews, approvals, scheduling and redirects; remove demo catalogue consumers.
+3. Identity and user operations: admin MFA/enrolment, recent-auth challenges, session/device revocation and privacy workflows. **Foundation delivered.**
+4. Catalogue, taxonomy and CMS: revisioning, previews, approvals, scheduling and redirects; remove demo catalogue consumers. **CMS workflow foundation delivered; catalogue migration and runtime redirect integration remain.**
 5. Commerce: payment operations, reconciliation, disputes, refunds with dual controls, subscriptions, offers and entitlements.
 6. Media operations: resilient resumable ingestion, scanning, rendition management, DRM/key integration, queue/dead-letter controls and recovery.
 7. Analytics, security and operations: consent-aware aggregation, alerts, feature flags, secrets rotation and incident tooling.

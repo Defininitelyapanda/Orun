@@ -19,6 +19,11 @@ enum ContentStatus {
   PUBLISHED
   ARCHIVED
 }
+enum CmsReviewStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+}
 enum ContentAccess {
   FREE
   STUDENT
@@ -963,15 +968,54 @@ model Notification {
 }
 
 model Page {
-  id String @id @default(cuid())
-  slug String @unique
-  title String
-  status ContentStatus @default(DRAFT)
-  sections Json
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  title          String
+  status         ContentStatus   @default(DRAFT)
+  reviewStatus   CmsReviewStatus @default(DRAFT)
+  sections       Json
+  currentVersion Int             @default(1)
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  revisions      PageRevision[]
+  previewTokens  PagePreviewToken[]
+}
+model PageRevision {
+  id               String   @id @default(cuid())
+  pageId           String
+  version          Int
+  title            String
+  sections         Json
+  changeNote       String?
+  createdByAdminId String
+  createdAt        DateTime @default(now())
+  page              Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  @@unique([pageId, version])
+  @@index([pageId, createdAt])
+}
+model PagePreviewToken {
+  id               String   @id @default(cuid())
+  pageId           String
+  tokenHash        String   @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdByAdminId String
+  createdAt        DateTime @default(now())
+  page              Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  @@index([pageId, expiresAt])
+}
+model RedirectRule {
+  id               String   @id @default(cuid())
+  sourcePath       String   @unique
+  destinationPath  String
+  statusCode       Int      @default(308)
+  active           Boolean  @default(true)
+  createdByAdminId String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  @@index([active, sourcePath])
 }
 model NavigationItem {
   id String @id @default(cuid())
