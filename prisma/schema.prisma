@@ -66,6 +66,27 @@ enum EntitlementSource {
   PROMOTION
   ADMIN_GRANT
 }
+enum RefundWorkflowStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+enum ReconciliationStatus {
+  MATCHED
+  MISMATCH
+  MISSING_PROVIDER
+  RESOLVED
+}
+enum DisputeStatus {
+  OPEN
+  NEEDS_RESPONSE
+  WON
+  LOST
+  CLOSED
+}
 enum MediaKind {
   VIDEO
   AUDIO
@@ -873,6 +894,8 @@ model Payment {
   order Order @relation(fields: [orderId], references: [id])
   refunds Refund[]
   events PaymentProviderEvent[]
+  reconciliations PaymentReconciliation[]
+  disputes PaymentDispute[]
   @@index([provider, providerTransactionId])
 }
 model PaymentProviderEvent {
@@ -888,15 +911,61 @@ model PaymentProviderEvent {
   @@unique([provider, providerEventId])
 }
 model Refund {
-  id String @id @default(cuid())
-  paymentId String
-  providerRefundId String?
-  amount BigInt
-  currency String @db.VarChar(3)
-  reason String
-  status PaymentStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  payment Payment @relation(fields: [paymentId], references: [id])
+  id                 String               @id @default(cuid())
+  paymentId          String
+  providerRefundId   String?
+  amount             BigInt
+  currency           String               @db.VarChar(3)
+  reason             String
+  status             PaymentStatus        @default(PENDING)
+  workflowStatus     RefundWorkflowStatus @default(PENDING_APPROVAL)
+  idempotencyKey     String               @unique
+  requestedByAdminId String
+  approvedByAdminId  String?
+  rejectedByAdminId  String?
+  decisionReason     String?
+  errorMessage       String?
+  approvedAt         DateTime?
+  executedAt         DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  payment            Payment              @relation(fields: [paymentId], references: [id])
+  @@index([paymentId, workflowStatus])
+}
+model PaymentReconciliation {
+  id                    String               @id @default(cuid())
+  paymentId             String
+  status                ReconciliationStatus
+  providerStatus        PaymentStatus?
+  providerAmount        BigInt?
+  providerCurrency      String?              @db.VarChar(3)
+  notes                 String?
+  checkedByAdminId      String
+  resolvedByAdminId     String?
+  resolvedAt            DateTime?
+  createdAt             DateTime             @default(now())
+  payment               Payment              @relation(fields: [paymentId], references: [id])
+  @@index([paymentId, createdAt])
+  @@index([status, createdAt])
+}
+model PaymentDispute {
+  id                    String        @id @default(cuid())
+  paymentId             String
+  providerDisputeId     String?
+  status                DisputeStatus @default(OPEN)
+  reason                String
+  amount                BigInt?
+  currency              String?       @db.VarChar(3)
+  responseDueAt         DateTime?
+  notes                 String?
+  openedByAdminId       String
+  resolvedByAdminId     String?
+  resolvedAt            DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  payment               Payment       @relation(fields: [paymentId], references: [id])
+  @@index([paymentId, status])
+  @@index([status, responseDueAt])
 }
 model Purchase {
   id String @id @default(cuid())
