@@ -1,9 +1,10 @@
-import { AdminRoleName, PrismaClient } from "@prisma/client";
+import { AdminRoleName } from "@prisma/client";
 import { Pbkdf2PasswordHasher } from "../lib/auth/passwords";
 import { rolePermissions } from "../lib/auth/permissions";
 import { films } from "../server/demo/catalog";
 import { canonicalGenres, contentFormats, genreGroups, genreSynonyms, storyThemes, taxonomySlug, tones } from "../lib/taxonomy/catalog";
-const db=new PrismaClient();
+import { createPrismaClient } from "../lib/db/client";
+const db=createPrismaClient();
 async function main(){
  if(process.env.NODE_ENV==="production"&&process.env.DEMO_MODE==="true")throw new Error("Demo seed is disabled in production");
  const plans=[{code:"STUDENT",name:"ORUN Student",priceAmount:BigInt(20000),maxQuality:480,maxProfiles:1,maxStreams:1,downloadsEnabled:false},{code:"ESSENTIAL",name:"ORUN Essential",priceAmount:BigInt(35000),maxQuality:720,maxProfiles:2,maxStreams:1,downloadsEnabled:true},{code:"PREMIUM",name:"ORUN Premium",priceAmount:BigInt(50000),maxQuality:1080,maxProfiles:4,maxStreams:2,downloadsEnabled:true},{code:"BLACK",name:"ORUN Black",priceAmount:BigInt(70000),maxQuality:2160,maxProfiles:6,maxStreams:4,downloadsEnabled:true}];

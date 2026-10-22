@@ -4,12 +4,13 @@ This runbook defines the minimum production operating procedure. It does not cla
 
 ## Deploy
 
-1. Confirm the commit is reviewed, CI is green, database migration SQL is archived, and a rollback owner is assigned.
-2. Rehearse migrations against a production-like copy, including timing, locks and backward compatibility. Record `MIGRATION_REHEARSAL` evidence.
-3. Verify a current backup restore into an isolated database and validate representative records. Record `BACKUP_RESTORE` evidence.
-4. Deploy application code compatibly before applying destructive schema changes. Apply Prisma migrations with a dedicated deployment identity.
-5. Run smoke, E2E, security and load checks; verify logs, metrics and alert delivery. Record each result with a reference to immutable output.
-6. Request a launch decision. A blocked decision is expected whenever a capability or evidence item is missing.
+1. Provision PostgreSQL with TLS, store its connection string as the Cloudflare Worker `DATABASE_URL` secret, and keep the direct migration URL only in the deployment environment. ORUN uses Prisma's engine-less `pg` adapter for Worker compatibility.
+2. Confirm the commit is reviewed, CI is green, database migration SQL is archived, and a rollback owner is assigned.
+3. Rehearse migrations against a production-like copy, including timing, locks and backward compatibility. Record `MIGRATION_REHEARSAL` evidence.
+4. Verify a current backup restore into an isolated database and validate representative records. Record `BACKUP_RESTORE` evidence.
+5. Deploy application code compatibly before applying destructive schema changes. Apply Prisma migrations with a dedicated deployment identity.
+6. Run smoke, E2E, security and load checks; verify logs, metrics and alert delivery. Record each result with a reference to immutable output.
+7. Request a launch decision. A blocked decision is expected whenever a capability or evidence item is missing.
 
 ## Roll back
 
