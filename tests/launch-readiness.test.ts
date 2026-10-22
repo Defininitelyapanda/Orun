@@ -1,0 +1,8 @@
+import { describe,expect,it } from "vitest";
+import { evaluateLaunchReadiness,evidenceRequirements } from "@/lib/release/readiness";
+const capabilities={database:true,playback:true,adminMfa:true,queue:true,storage:true,email:true,securityIngest:true,analyticsRollup:true,mpesa:true,card:false};
+describe("launch readiness gate",()=>{
+ it("fails closed when operational evidence is absent",()=>{const result=evaluateLaunchReadiness(capabilities,[]);expect(result.ready).toBe(false);expect(result.checks.filter(check=>!check.passed)).toHaveLength(evidenceRequirements.length)});
+ it("passes only with current successful evidence and capabilities",()=>{const now=new Date("2026-10-22T10:00:00Z"),evidence=evidenceRequirements.map(item=>({kind:item.kind,result:"PASS",performedAt:new Date("2026-10-21T10:00:00Z"),expiresAt:new Date("2026-11-01T10:00:00Z"),evidenceReference:`run://${item.kind}`}));expect(evaluateLaunchReadiness(capabilities,evidence,now).ready).toBe(true);expect(evaluateLaunchReadiness({...capabilities,database:false},evidence,now).ready).toBe(false)});
+ it("rejects failed and expired evidence",()=>{const now=new Date("2026-10-22T10:00:00Z"),evidence=[{kind:"E2E_TEST",result:"FAIL",performedAt:now,expiresAt:new Date("2026-10-23T10:00:00Z"),evidenceReference:"run://failed"},{kind:"LOAD_TEST",result:"PASS",performedAt:new Date("2026-01-01T00:00:00Z"),expiresAt:new Date("2026-01-02T00:00:00Z"),evidenceReference:"run://expired"}];const result=evaluateLaunchReadiness(capabilities,evidence,now);expect(result.checks.find(check=>check.key==="evidence:E2E_TEST")?.passed).toBe(false);expect(result.checks.find(check=>check.key==="evidence:LOAD_TEST")?.passed).toBe(false)});
+});

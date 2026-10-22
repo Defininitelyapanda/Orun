@@ -26,6 +26,7 @@ Audit date: 2026-10-20. This document records observed repository state and the 
 | Operations and security | Functional foundation | Consent-scoped daily analytics aggregates, optimistic-lock feature flags with immutable revisions, deduplicated security alerts, audited incident transitions and secret-rotation metadata are implemented. Alert routing, scheduler configuration and observability providers remain deployment requirements. |
 | Audit | Foundation implemented | Structured fields and append-only database trigger are added. Existing mutation routes still need systematic instrumentation. |
 | Backups and disaster recovery | Missing operational proof | The application cannot validate provider backups, PITR, restore drills, RPO or RTO from source code alone. |
+| Launch readiness | Source gate implemented | Production approval now fails closed on missing runtime capabilities or absent, failed or expired migration, restore, rollback, E2E, security, load and observability evidence. Provider-side evidence is not yet present in this repository. |
 
 ## Security findings and actions
 
@@ -59,7 +60,7 @@ Sensitive actions must additionally require MFA and recent authentication. The s
 5. Commerce: payment operations, reconciliation, disputes, refunds with dual controls, subscriptions, offers and entitlements. **Payment/refund/dispute and subscription operations foundation delivered; offer lifecycle, automated settlement imports and payout controls remain.**
 6. Media operations: resilient resumable ingestion, scanning, rendition management, DRM/key integration, queue/dead-letter controls and recovery. **Persisted scan/retry/dead-letter and operator recovery foundation delivered; production storage/DRM topology remains.**
 7. Analytics, security and operations: consent-aware aggregation, alerts, feature flags, secrets rotation and incident tooling. **Control-plane foundation delivered; provider scheduling and alert routing remain.**
-8. Validation and launch: integration/E2E/security/load tests, observability, backup restore drill, migration rehearsal and rollback exercise.
+8. Validation and launch: integration/E2E/security/load tests, observability, backup restore drill, migration rehearsal and rollback exercise. **Fail-closed evidence and approval workflow delivered; provider-side exercises remain intentionally unasserted.**
 
 ## External requirements and blockers
 

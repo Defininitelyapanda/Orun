@@ -158,6 +158,26 @@ enum IncidentStatus {
   RESOLVED
 }
 
+enum ReadinessEvidenceKind {
+  MIGRATION_REHEARSAL
+  BACKUP_RESTORE
+  ROLLBACK_EXERCISE
+  E2E_TEST
+  SECURITY_TEST
+  LOAD_TEST
+  OBSERVABILITY_CHECK
+}
+
+enum EvidenceResult {
+  PASS
+  FAIL
+}
+
+enum LaunchDecision {
+  APPROVED
+  BLOCKED
+}
+
 enum AdminRoleName {
   OWNER
   TECHNICAL_ADMIN
@@ -1380,6 +1400,35 @@ model SecretRotationRecord {
 
   @@unique([system, keyAlias, rotatedAt])
   @@index([status, nextRotationDueAt])
+}
+
+model ReadinessEvidence {
+  id                String                @id @default(cuid())
+  kind              ReadinessEvidenceKind
+  result            EvidenceResult
+  environment       String
+  releaseVersion    String?
+  evidenceReference String
+  notes             String?
+  performedAt       DateTime
+  expiresAt         DateTime
+  recordedByAdminId String
+  createdAt         DateTime              @default(now())
+
+  @@index([kind, environment, performedAt])
+}
+
+model LaunchDecisionRecord {
+  id                String         @id @default(cuid())
+  releaseVersion    String
+  environment       String
+  decision          LaunchDecision
+  readinessSnapshot Json
+  reason            String
+  decidedByAdminId  String
+  createdAt         DateTime       @default(now())
+
+  @@index([releaseVersion, environment, createdAt])
 }
 
 model AdminUser {
