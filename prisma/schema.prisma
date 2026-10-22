@@ -1,9 +1,10 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum UserStatus {
@@ -12,6 +13,7 @@ enum UserStatus {
   SUSPENDED
   DELETED
 }
+
 enum ContentStatus {
   DRAFT
   PROCESSING
@@ -19,11 +21,13 @@ enum ContentStatus {
   PUBLISHED
   ARCHIVED
 }
+
 enum CmsReviewStatus {
   DRAFT
   IN_REVIEW
   APPROVED
 }
+
 enum ContentAccess {
   FREE
   STUDENT
@@ -34,6 +38,7 @@ enum ContentAccess {
   PURCHASE
   ADMIN_ONLY
 }
+
 enum SubscriptionStatus {
   TRIALING
   ACTIVE
@@ -42,6 +47,7 @@ enum SubscriptionStatus {
   CANCELLED
   EXPIRED
 }
+
 enum PaymentStatus {
   PENDING
   PROCESSING
@@ -51,6 +57,7 @@ enum PaymentStatus {
   REFUNDED
   PARTIALLY_REFUNDED
 }
+
 enum PaymentMethod {
   MPESA
   CARD
@@ -59,6 +66,7 @@ enum PaymentMethod {
   BANK_TRANSFER
   OTHER_MOBILE_MONEY
 }
+
 enum EntitlementSource {
   SUBSCRIPTION
   PURCHASE
@@ -66,6 +74,7 @@ enum EntitlementSource {
   PROMOTION
   ADMIN_GRANT
 }
+
 enum RefundWorkflowStatus {
   PENDING_APPROVAL
   APPROVED
@@ -74,12 +83,14 @@ enum RefundWorkflowStatus {
   SUCCEEDED
   FAILED
 }
+
 enum ReconciliationStatus {
   MATCHED
   MISMATCH
   MISSING_PROVIDER
   RESOLVED
 }
+
 enum DisputeStatus {
   OPEN
   NEEDS_RESPONSE
@@ -87,6 +98,7 @@ enum DisputeStatus {
   LOST
   CLOSED
 }
+
 enum MediaKind {
   VIDEO
   AUDIO
@@ -97,6 +109,7 @@ enum MediaKind {
   THUMBNAIL
   AVATAR
 }
+
 enum MediaStatus {
   UPLOADED
   VALIDATING
@@ -104,12 +117,14 @@ enum MediaStatus {
   READY
   FAILED
 }
+
 enum MediaScanStatus {
   PENDING
   CLEAN
   INFECTED
   FAILED
 }
+
 enum IngestionJobStatus {
   QUEUED
   LEASED
@@ -121,6 +136,28 @@ enum IngestionJobStatus {
   DEAD_LETTER
   CANCELLED
 }
+
+enum AlertSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+}
+
 enum AdminRoleName {
   OWNER
   TECHNICAL_ADMIN
@@ -133,6 +170,7 @@ enum AdminRoleName {
   SUPPORT
   CUSTOMER_SUPPORT
 }
+
 enum DataRequestStatus {
   REQUESTED
   PROCESSING
@@ -141,6 +179,7 @@ enum DataRequestStatus {
   FAILED
   CANCELLED
 }
+
 enum AccountDeletionStatus {
   REQUESTED
   VERIFYING
@@ -151,784 +190,866 @@ enum AccountDeletionStatus {
 }
 
 model User {
-  id String @id @default(cuid())
-  name String
-  email String @unique
-  passwordHash String
-  emailVerifiedAt DateTime?
-  countryCode String? @db.VarChar(2)
-  status UserStatus @default(PENDING)
-  marketingOptIn Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profiles Profile[]
-  sessions Session[]
-  accountPreference AccountPreference?
-  privacyPreference PrivacyPreference?
+  id                     String                  @id @default(cuid())
+  name                   String
+  email                  String                  @unique
+  passwordHash           String
+  emailVerifiedAt        DateTime?
+  countryCode            String?                 @db.VarChar(2)
+  status                 UserStatus              @default(PENDING)
+  marketingOptIn         Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  profiles               Profile[]
+  sessions               Session[]
+  accountPreference      AccountPreference?
+  privacyPreference      PrivacyPreference?
   notificationPreference NotificationPreference?
-  cookieConsents CookieConsent[]
-  dataExportRequests DataExportRequest[]
+  cookieConsents         CookieConsent[]
+  dataExportRequests     DataExportRequest[]
   accountDeletionRequest AccountDeletionRequest?
-  securityEvents SecurityEvent[]
-  privacyAuditEvents PrivacyAuditEvent[]
+  securityEvents         SecurityEvent[]
+  privacyAuditEvents     PrivacyAuditEvent[]
 }
+
 model Profile {
-  id String @id @default(cuid())
-  userId String
-  name String
-  avatarUrl String?
-  isKids Boolean @default(false)
-  locale String @default("en")
-  createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String             @id @default(cuid())
+  userId     String
+  name       String
+  avatarUrl  String?
+  isKids     Boolean            @default(false)
+  locale     String             @default("en")
+  createdAt  DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   preference ProfilePreference?
+
   @@index([userId])
 }
+
 model Session {
-  id String @id @default(cuid())
-  userId String
-  tokenHash String @unique
-  expiresAt DateTime
-  lastSeenAt DateTime @default(now())
-  ipHash String?
-  userAgent String?
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  expiresAt     DateTime
+  lastSeenAt    DateTime  @default(now())
+  ipHash        String?
+  userAgent     String?
   mfaVerifiedAt DateTime?
-  revokedAt DateTime?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revokedAt     DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 model Passkey {
-  id String @id @default(cuid())
-  userId String
-  name String
-  credentialId String @unique
-  publicKey Bytes
-  counter BigInt @default(0)
-  transports String[]
-  deviceType String
-  backedUp Boolean @default(false)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  credentialId String   @unique
+  publicKey    Bytes
+  counter      BigInt   @default(0)
+  transports   String[]
+  deviceType   String
+  backedUp     Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
+
 model PasswordResetToken {
-  id String @id @default(cuid())
-  userId String
-  tokenHash String @unique
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
   expiresAt DateTime
-  usedAt DateTime?
-  createdAt DateTime @default(now())
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
   @@index([userId, expiresAt])
 }
 
 model AccountPreference {
-  id String @id @default(cuid())
-  userId String @unique
-  theme String @default("SYSTEM")
-  interfaceLanguage String @default("en")
-  regionCode String? @db.VarChar(2)
-  timeZone String @default("Africa/Nairobi")
-  currency String @default("KES") @db.VarChar(3)
-  dateTimeFormat String @default("REGIONAL")
-  browsingDensity String @default("COMFORTABLE")
-  reduceMotion Boolean @default(false)
-  highContrast Boolean @default(false)
-  largerText Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  theme             String   @default("SYSTEM")
+  interfaceLanguage String   @default("en")
+  regionCode        String?  @db.VarChar(2)
+  timeZone          String   @default("Africa/Nairobi")
+  currency          String   @default("KES") @db.VarChar(3)
+  dateTimeFormat    String   @default("REGIONAL")
+  browsingDensity   String   @default("COMFORTABLE")
+  reduceMotion      Boolean  @default(false)
+  highContrast      Boolean  @default(false)
+  largerText        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ProfilePreference {
-  id String @id @default(cuid())
-  profileId String @unique
-  contentLanguage String @default("en")
-  preferredGenres String[] @default([])
-  durationMin Int @default(0)
-  durationMax Int @default(240)
-  preferredCountries String[] @default([])
-  audioLanguages String[] @default([])
-  subtitleLanguages String[] @default([])
-  hideWatched Boolean @default(false)
-  allowOutsideGenres Boolean @default(true)
-  showDescriptions Boolean @default(true)
-  showRatings Boolean @default(true)
-  showMetadata Boolean @default(true)
-  personalizedRecommendations Boolean @default(true)
-  useWatchHistory Boolean @default(true)
-  useRatings Boolean @default(true)
-  continueWatchingPersonalization Boolean @default(true)
-  homepagePersonalization Boolean @default(true)
-  browsingPersonalization Boolean @default(false)
-  playbackQuality String @default("AUTO")
-  autoplayNext Boolean @default(true)
-  autoplayTrailers Boolean @default(true)
-  rememberPosition Boolean @default(true)
-  resumeUnfinished Boolean @default(true)
-  showPlaybackControls Boolean @default(true)
-  defaultSubtitles String @default("MATCH_CONTENT")
-  preferredAudioTrack String @default("ORIGINAL")
-  playbackSpeed Float @default(1)
-  skipIntro Boolean @default(false)
-  skipRecap Boolean @default(false)
-  lowerBandwidth Boolean @default(false)
-  adaptiveQuality Boolean @default(true)
-  subtitleSize String @default("MEDIUM")
-  subtitleColor String @default("#FFFFFF")
-  subtitleBackground String @default("#000000")
-  subtitleBackgroundOpacity Int @default(75)
-  subtitleOutline String @default("SHADOW")
-  subtitlePosition String @default("BOTTOM")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id                              String   @id @default(cuid())
+  profileId                       String   @unique
+  contentLanguage                 String   @default("en")
+  preferredGenres                 String[] @default([])
+  durationMin                     Int      @default(0)
+  durationMax                     Int      @default(240)
+  preferredCountries              String[] @default([])
+  audioLanguages                  String[] @default([])
+  subtitleLanguages               String[] @default([])
+  hideWatched                     Boolean  @default(false)
+  allowOutsideGenres              Boolean  @default(true)
+  showDescriptions                Boolean  @default(true)
+  showRatings                     Boolean  @default(true)
+  showMetadata                    Boolean  @default(true)
+  personalizedRecommendations     Boolean  @default(true)
+  useWatchHistory                 Boolean  @default(true)
+  useRatings                      Boolean  @default(true)
+  continueWatchingPersonalization Boolean  @default(true)
+  homepagePersonalization         Boolean  @default(true)
+  browsingPersonalization         Boolean  @default(false)
+  playbackQuality                 String   @default("AUTO")
+  autoplayNext                    Boolean  @default(true)
+  autoplayTrailers                Boolean  @default(true)
+  rememberPosition                Boolean  @default(true)
+  resumeUnfinished                Boolean  @default(true)
+  showPlaybackControls            Boolean  @default(true)
+  defaultSubtitles                String   @default("MATCH_CONTENT")
+  preferredAudioTrack             String   @default("ORIGINAL")
+  playbackSpeed                   Float    @default(1)
+  skipIntro                       Boolean  @default(false)
+  skipRecap                       Boolean  @default(false)
+  lowerBandwidth                  Boolean  @default(false)
+  adaptiveQuality                 Boolean  @default(true)
+  subtitleSize                    String   @default("MEDIUM")
+  subtitleColor                   String   @default("#FFFFFF")
+  subtitleBackground              String   @default("#000000")
+  subtitleBackgroundOpacity       Int      @default(75)
+  subtitleOutline                 String   @default("SHADOW")
+  subtitlePosition                String   @default("BOTTOM")
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+  profile                         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model PrivacyPreference {
-  id String @id @default(cuid())
-  userId String @unique
-  productAnalytics Boolean @default(false)
-  personalizedMeasurement Boolean @default(false)
-  diagnosticReporting Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  productAnalytics        Boolean  @default(false)
+  personalizedMeasurement Boolean  @default(false)
+  diagnosticReporting     Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model NotificationPreference {
-  id String @id @default(cuid())
-  userId String @unique
-  promotionalEmail Boolean @default(false)
-  newReleaseEmail Boolean @default(false)
-  recommendationEmail Boolean @default(false)
-  watchlistEmail Boolean @default(false)
-  pushNewReleases Boolean @default(false)
-  pushWatchlist Boolean @default(false)
-  pushRecommendations Boolean @default(false)
-  pushSubscriptionReminders Boolean @default(false)
-  inAppAnnouncements Boolean @default(true)
-  inAppAccountEvents Boolean @default(true)
-  inAppContentAvailability Boolean @default(true)
-  inAppBillingEvents Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                        String   @id @default(cuid())
+  userId                    String   @unique
+  promotionalEmail          Boolean  @default(false)
+  newReleaseEmail           Boolean  @default(false)
+  recommendationEmail       Boolean  @default(false)
+  watchlistEmail            Boolean  @default(false)
+  pushNewReleases           Boolean  @default(false)
+  pushWatchlist             Boolean  @default(false)
+  pushRecommendations       Boolean  @default(false)
+  pushSubscriptionReminders Boolean  @default(false)
+  inAppAnnouncements        Boolean  @default(true)
+  inAppAccountEvents        Boolean  @default(true)
+  inAppContentAvailability  Boolean  @default(true)
+  inAppBillingEvents        Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model CookieConsent {
-  id String @id @default(cuid())
-  userId String?
+  id            String    @id @default(cuid())
+  userId        String?
   policyVersion String
-  preferences Boolean @default(false)
-  analytics Boolean @default(false)
-  advertising Boolean @default(false)
-  regionCode String? @db.VarChar(2)
-  recordedAt DateTime @default(now())
-  withdrawnAt DateTime?
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  preferences   Boolean   @default(false)
+  analytics     Boolean   @default(false)
+  advertising   Boolean   @default(false)
+  regionCode    String?   @db.VarChar(2)
+  recordedAt    DateTime  @default(now())
+  withdrawnAt   DateTime?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@index([userId, recordedAt])
 }
 
 model DataExportRequest {
-  id String @id @default(cuid())
-  userId String
-  status DataRequestStatus @default(REQUESTED)
-  storageKey String?
-  downloadTokenHash String? @unique
-  expiresAt DateTime?
-  failureReason String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  completedAt DateTime?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  userId            String
+  status            DataRequestStatus @default(REQUESTED)
+  storageKey        String?
+  downloadTokenHash String?           @unique
+  expiresAt         DateTime?
+  failureReason     String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  completedAt       DateTime?
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
 
 model AccountDeletionRequest {
-  id String @id @default(cuid())
-  userId String @unique
-  status AccountDeletionStatus @default(REQUESTED)
-  requestedAt DateTime @default(now())
-  verifiedAt DateTime?
-  completedAt DateTime?
+  id            String                @id @default(cuid())
+  userId        String                @unique
+  status        AccountDeletionStatus @default(REQUESTED)
+  requestedAt   DateTime              @default(now())
+  verifiedAt    DateTime?
+  completedAt   DateTime?
   failureReason String?
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt     DateTime              @updatedAt
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SecurityEvent {
-  id String @id @default(cuid())
-  userId String
-  type String
-  summary String
-  ipHash String?
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  summary   String
+  ipHash    String?
   userAgent String?
   createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
 
 model PrivacyAuditEvent {
-  id String @id @default(cuid())
-  userId String
-  action String
-  category String
-  metadata Json?
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  category  String
+  metadata  Json?
   createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
 
 model SubscriptionPlan {
-  id String @id @default(cuid())
-  code String @unique
-  name String
-  priceAmount BigInt
-  currency String @db.VarChar(3)
-  billingInterval String @default("MONTH")
-  maxQuality Int
-  maxProfiles Int
-  maxStreams Int
-  downloadsEnabled Boolean @default(false)
-  audioQuality String
-  benefits Json
-  active Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  priceAmount      BigInt
+  currency         String   @db.VarChar(3)
+  billingInterval  String   @default("MONTH")
+  maxQuality       Int
+  maxProfiles      Int
+  maxStreams       Int
+  downloadsEnabled Boolean  @default(false)
+  audioQuality     String
+  benefits         Json
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
+
 model Subscription {
-  id String @id @default(cuid())
-  userId String
-  planId String
-  status SubscriptionStatus
-  startsAt DateTime
+  id               String             @id @default(cuid())
+  userId           String
+  planId           String
+  status           SubscriptionStatus
+  startsAt         DateTime
   currentPeriodEnd DateTime?
-  cancelledAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  cancelledAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
+
 model SubscriptionEvent {
-  id String @id @default(cuid())
+  id             String   @id @default(cuid())
   subscriptionId String
-  type String
-  data Json?
-  createdAt DateTime @default(now())
+  type           String
+  data           Json?
+  createdAt      DateTime @default(now())
 }
 
 model Film {
-  id String @id @default(cuid())
-  slug String @unique
-  title String
-  description String
-  longDescription String?
-  year Int
-  runtimeMinutes Int
-  ageRating String?
-  countryCode String
-  originalLanguage String
-  status ContentStatus @default(DRAFT)
-  access ContentAccess @default(PREMIUM)
-  isOriginal Boolean @default(false)
-  isShort Boolean @default(false)
-  contentFormat String @default("FEATURE_FILM")
-  region String?
-  culturalContext String?
-  filmingLocations String[] @default([])
-  productionStatus String @default("RELEASED")
-  productionCompany String?
-  originalReleaseDate DateTime?
-  awards String[] @default([])
-  festivalSelections String[] @default([])
-  aspectRatio String?
-  dubbedLanguages String[] @default([])
-  subtitleLanguages String[] @default([])
-  closedCaptions Boolean @default(false)
-  audioDescription Boolean @default(false)
-  signLanguageInterpretation Boolean @default(false)
-  videoQualities String[] @default([])
-  popularityScore Float @default(0)
-  trending Boolean @default(false)
-  featured Boolean @default(false)
-  privateMessagesEnabled Boolean @default(true)
-  commentsEnabled Boolean @default(true)
-  ratingsEnabled Boolean @default(true)
-  trailersEnabled Boolean @default(true)
-  heroOrder Int?
-  heroDisplaySeconds Int?
-  purchaseAmount BigInt?
-  rentalAmount BigInt?
-  currency String? @db.VarChar(3)
-  publishedAt DateTime?
-  seoTitle String?
-  seoDescription String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                         String        @id @default(cuid())
+  slug                       String        @unique
+  title                      String
+  description                String
+  longDescription            String?
+  year                       Int
+  runtimeMinutes             Int
+  ageRating                  String?
+  countryCode                String
+  originalLanguage           String
+  status                     ContentStatus @default(DRAFT)
+  access                     ContentAccess @default(PREMIUM)
+  isOriginal                 Boolean       @default(false)
+  isShort                    Boolean       @default(false)
+  contentFormat              String        @default("FEATURE_FILM")
+  region                     String?
+  culturalContext            String?
+  filmingLocations           String[]      @default([])
+  productionStatus           String        @default("RELEASED")
+  productionCompany          String?
+  originalReleaseDate        DateTime?
+  awards                     String[]      @default([])
+  festivalSelections         String[]      @default([])
+  aspectRatio                String?
+  dubbedLanguages            String[]      @default([])
+  subtitleLanguages          String[]      @default([])
+  closedCaptions             Boolean       @default(false)
+  audioDescription           Boolean       @default(false)
+  signLanguageInterpretation Boolean       @default(false)
+  videoQualities             String[]      @default([])
+  popularityScore            Float         @default(0)
+  trending                   Boolean       @default(false)
+  featured                   Boolean       @default(false)
+  privateMessagesEnabled     Boolean       @default(true)
+  commentsEnabled            Boolean       @default(true)
+  ratingsEnabled             Boolean       @default(true)
+  trailersEnabled            Boolean       @default(true)
+  heroOrder                  Int?
+  heroDisplaySeconds         Int?
+  purchaseAmount             BigInt?
+  rentalAmount               BigInt?
+  currency                   String?       @db.VarChar(3)
+  publishedAt                DateTime?
+  seoTitle                   String?
+  seoDescription             String?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+
   @@index([status, publishedAt])
   @@index([status, year, id])
   @@index([status, trending, popularityScore])
   @@index([featured, heroOrder])
   @@index([contentFormat, region])
 }
+
 model Series {
-  id String @id @default(cuid())
-  slug String @unique
-  title String
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
   description String
-  status ContentStatus @default(DRAFT)
-  access ContentAccess @default(PREMIUM)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status      ContentStatus @default(DRAFT)
+  access      ContentAccess @default(PREMIUM)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
+
 model Episode {
-  id String @id @default(cuid())
-  seriesId String
-  slug String
-  title String
-  description String
-  seasonNumber Int
-  episodeNumber Int
+  id             String        @id @default(cuid())
+  seriesId       String
+  slug           String
+  title          String
+  description    String
+  seasonNumber   Int
+  episodeNumber  Int
   runtimeMinutes Int
-  status ContentStatus @default(DRAFT)
-  access ContentAccess @default(PREMIUM)
+  status         ContentStatus @default(DRAFT)
+  access         ContentAccess @default(PREMIUM)
+
   @@unique([seriesId, seasonNumber, episodeNumber])
 }
+
 model Genre {
-  id String @id @default(cuid())
-  slug String @unique
-  name String @unique
-  description String?
-  parentId String?
-  localizedNames Json?
-  synonyms String[] @default([])
-  recommendationTags String[] @default([])
-  active Boolean @default(true)
-  publicVisible Boolean @default(true)
-  featured Boolean @default(false)
-  artworkUrl String?
-  archivedAt DateTime?
-  mergedIntoId String?
-  sortOrder Int @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  slug               String    @unique
+  name               String    @unique
+  description        String?
+  parentId           String?
+  localizedNames     Json?
+  synonyms           String[]  @default([])
+  recommendationTags String[]  @default([])
+  active             Boolean   @default(true)
+  publicVisible      Boolean   @default(true)
+  featured           Boolean   @default(false)
+  artworkUrl         String?
+  archivedAt         DateTime?
+  mergedIntoId       String?
+  sortOrder          Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
   @@index([parentId, active, publicVisible, sortOrder])
   @@index([featured, active, sortOrder])
 }
+
 model FilmGenre {
-  filmId String
-  genreId String
-  isPrimary Boolean @default(false)
-  source String @default("EDITORIAL")
-  reviewStatus String @default("APPROVED")
-  createdAt DateTime @default(now())
+  filmId       String
+  genreId      String
+  isPrimary    Boolean  @default(false)
+  source       String   @default("EDITORIAL")
+  reviewStatus String   @default("APPROVED")
+  createdAt    DateTime @default(now())
+
   @@id([filmId, genreId])
   @@index([genreId, filmId])
   @@index([filmId, isPrimary])
 }
+
 model StoryTheme {
-  id String @id @default(cuid())
-  slug String @unique
-  name String @unique
-  description String?
-  synonyms String[] @default([])
-  active Boolean @default(true)
-  publicVisible Boolean @default(true)
-  sortOrder Int @default(0)
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String   @unique
+  description   String?
+  synonyms      String[] @default([])
+  active        Boolean  @default(true)
+  publicVisible Boolean  @default(true)
+  sortOrder     Int      @default(0)
 }
+
 model FilmStoryTheme {
-  filmId String
+  filmId  String
   themeId String
+
   @@id([filmId, themeId])
   @@index([themeId, filmId])
 }
+
 model Tone {
-  id String @id @default(cuid())
-  slug String @unique
-  name String @unique
-  description String?
-  active Boolean @default(true)
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  name          String  @unique
+  description   String?
+  active        Boolean @default(true)
   publicVisible Boolean @default(true)
-  sortOrder Int @default(0)
+  sortOrder     Int     @default(0)
 }
+
 model FilmTone {
   filmId String
   toneId String
+
   @@id([filmId, toneId])
   @@index([toneId, filmId])
 }
+
 model ContentFormatTaxon {
-  id String @id @default(cuid())
-  slug String @unique
-  name String @unique
-  description String?
-  active Boolean @default(true)
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  name          String  @unique
+  description   String?
+  active        Boolean @default(true)
   publicVisible Boolean @default(true)
-  sortOrder Int @default(0)
+  sortOrder     Int     @default(0)
 }
+
 model FilmFormat {
-  filmId String
-  formatId String
+  filmId    String
+  formatId  String
   isPrimary Boolean @default(false)
+
   @@id([filmId, formatId])
   @@index([formatId, filmId])
   @@index([filmId, isPrimary])
 }
+
 model FilmCountry {
-  filmId String
+  filmId    String
   countryId String
   isPrimary Boolean @default(false)
+
   @@id([filmId, countryId])
   @@index([countryId, filmId])
 }
+
 model FilmLanguage {
-  filmId String
+  filmId     String
   languageId String
-  kind String
+  kind       String
   isOriginal Boolean @default(false)
+
   @@id([filmId, languageId, kind])
   @@index([languageId, kind, filmId])
 }
+
 model ClassificationSystem {
-  id String @id @default(cuid())
-  code String @unique
-  name String
+  id            String  @id @default(cuid())
+  code          String  @unique
+  name          String
   territoryCode String? @db.VarChar(2)
-  labels Json
-  active Boolean @default(true)
+  labels        Json
+  active        Boolean @default(true)
 }
+
 model FilmAudienceClassification {
-  filmId String
-  systemId String
-  label String
+  filmId     String
+  systemId   String
+  label      String
   advisories String[] @default([])
+
   @@id([filmId, systemId])
   @@index([systemId, label, filmId])
 }
+
 model ClassificationSuggestion {
-  id String @id @default(cuid())
-  filmId String
-  userId String
-  kind String
-  valueId String
-  isPrimary Boolean @default(false)
-  status String @default("PENDING")
+  id             String   @id @default(cuid())
+  filmId         String
+  userId         String
+  kind           String
+  valueId        String
+  isPrimary      Boolean  @default(false)
+  status         String   @default("PENDING")
   moderationNote String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   @@unique([filmId, userId, kind, valueId])
   @@index([status, createdAt])
   @@index([filmId, status])
 }
+
 model FilmCreatorRecipient {
-  filmId String @id
-  userId String
-  privateMessagesEnabled Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  filmId                 String   @id
+  userId                 String
+  privateMessagesEnabled Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
   @@index([userId, filmId])
 }
+
 model Collection {
-  id String @id @default(cuid())
-  slug String @unique
-  title String
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
   description String?
-  kind String @default("EDITORIAL")
-  published Boolean @default(false)
-  createdAt DateTime @default(now())
+  kind        String   @default("EDITORIAL")
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
+
 model CollectionItem {
   collectionId String
-  filmId String
-  position Int
+  filmId       String
+  position     Int
+
   @@id([collectionId, filmId])
   @@unique([collectionId, position])
 }
+
 model Country {
-  id String @id @default(cuid())
+  id   String @id @default(cuid())
   code String @unique @db.VarChar(2)
   name String
 }
+
 model Language {
-  id String @id @default(cuid())
+  id   String @id @default(cuid())
   code String @unique
   name String
 }
+
 model Person {
-  id String @id @default(cuid())
-  slug String @unique
-  name String
-  biography String?
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  biography   String?
   countryCode String?
-  photoUrl String?
-  roles Json
+  photoUrl    String?
+  roles       Json
   socialLinks Json?
 }
 
 model MediaAsset {
-  id String @id @default(cuid())
-  filmId String?
-  episodeId String?
-  kind MediaKind
-  status MediaStatus @default(UPLOADED)
-  storageKey String
-  sourceFilename String
-  contentType String
-  sizeBytes BigInt
-  checksum String?
-  processingProgress Int @default(0)
-  metadata Json?
-  errorMessage String?
-  scanStatus MediaScanStatus @default(PENDING)
-  quarantinedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String          @id @default(cuid())
+  filmId             String?
+  episodeId          String?
+  kind               MediaKind
+  status             MediaStatus     @default(UPLOADED)
+  storageKey         String
+  sourceFilename     String
+  contentType        String
+  sizeBytes          BigInt
+  checksum           String?
+  processingProgress Int             @default(0)
+  metadata           Json?
+  errorMessage       String?
+  scanStatus         MediaScanStatus @default(PENDING)
+  quarantinedAt      DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
+
 model VideoRendition {
-  id String @id @default(cuid())
+  id           String  @id @default(cuid())
   mediaAssetId String
-  resolution Int
-  bitrate Int
-  codec String
+  resolution   Int
+  bitrate      Int
+  codec        String
   audioQuality String?
-  fileSize BigInt?
-  storageKey String
-  available Boolean @default(true)
+  fileSize     BigInt?
+  storageKey   String
+  available    Boolean @default(true)
+
   @@unique([mediaAssetId, resolution, codec])
 }
+
 model AudioTrack {
-  id String @id @default(cuid())
+  id           String  @id @default(cuid())
   mediaAssetId String
   languageCode String
-  label String
-  codec String
-  storageKey String
-  isDefault Boolean @default(false)
+  label        String
+  codec        String
+  storageKey   String
+  isDefault    Boolean @default(false)
 }
+
 model SubtitleTrack {
-  id String @id @default(cuid())
+  id           String  @id @default(cuid())
   mediaAssetId String
   languageCode String
-  label String
-  format String
-  storageKey String
-  isDefault Boolean @default(false)
+  label        String
+  format       String
+  storageKey   String
+  isDefault    Boolean @default(false)
 }
 
 model WatchHistory {
-  id String @id @default(cuid())
-  profileId String
-  filmId String
-  positionSeconds Int
+  id                String   @id @default(cuid())
+  profileId         String
+  filmId            String
+  positionSeconds   Int
   completionPercent Float
-  completed Boolean @default(false)
-  lastWatchedAt DateTime @updatedAt
+  completed         Boolean  @default(false)
+  lastWatchedAt     DateTime @updatedAt
+
   @@unique([profileId, filmId])
 }
+
 model ContinueWatching {
-  id String @id @default(cuid())
-  profileId String
-  filmId String
+  id              String   @id @default(cuid())
+  profileId       String
+  filmId          String
   positionSeconds Int
-  updatedAt DateTime @updatedAt
+  updatedAt       DateTime @updatedAt
+
   @@unique([profileId, filmId])
 }
+
 model Watchlist {
   profileId String
-  filmId String
+  filmId    String
   createdAt DateTime @default(now())
+
   @@id([profileId, filmId])
 }
+
 model Rating {
-  id String @id @default(cuid())
+  id        String   @id @default(cuid())
   profileId String
-  filmId String
-  value Int
-  active Boolean @default(true)
+  filmId    String
+  value     Int
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@unique([profileId, filmId])
   @@index([filmId, active, value])
 }
+
 model FilmRatingAggregate {
-  filmId String @id
-  average Float @default(0)
-  count Int @default(0)
-  distribution Json
-  bayesianScore Float @default(0)
-  updatedAt DateTime @updatedAt
+  filmId        String   @id
+  average       Float    @default(0)
+  count         Int      @default(0)
+  distribution  Json
+  bayesianScore Float    @default(0)
+  updatedAt     DateTime @updatedAt
+
   @@index([bayesianScore, count])
 }
+
 model Review {
-  id String @id @default(cuid())
+  id        String   @id @default(cuid())
   profileId String
-  filmId String
-  title String?
-  body String
-  status String @default("PUBLISHED")
+  filmId    String
+  title     String?
+  body      String
+  status    String   @default("PUBLISHED")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 model Comment {
-  id String @id @default(cuid())
-  profileId String
-  filmId String
-  parentId String?
-  body String
-  status String @default("PUBLISHED")
-  pinned Boolean @default(false)
-  creatorReply Boolean @default(false)
-  helpfulCount Int @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  profileId    String
+  filmId       String
+  parentId     String?
+  body         String
+  status       String   @default("PUBLISHED")
+  pinned       Boolean  @default(false)
+  creatorReply Boolean  @default(false)
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   @@index([filmId, status, createdAt])
   @@index([filmId, status, helpfulCount, createdAt])
   @@index([parentId, status, createdAt])
 }
+
 model CommentReply {
-  id String @id @default(cuid())
+  id        String   @id @default(cuid())
   commentId String
   profileId String
-  body String
+  body      String
   createdAt DateTime @default(now())
 }
+
 model CommentLike {
-  id String @id @default(cuid())
+  id        String   @id @default(cuid())
   commentId String
   profileId String
   createdAt DateTime @default(now())
+
   @@unique([commentId, profileId])
 }
+
 model CommentReport {
-  id String @id @default(cuid())
-  commentId String
+  id                String   @id @default(cuid())
+  commentId         String
   reporterProfileId String
-  reason String
-  status String @default("OPEN")
-  moderationNote String?
-  createdAt DateTime @default(now())
+  reason            String
+  status            String   @default("OPEN")
+  moderationNote    String?
+  createdAt         DateTime @default(now())
 }
+
 model CreatorConversation {
-  id String @id @default(cuid())
-  filmId String
-  senderProfileId String
-  recipientUserId String
-  senderArchivedAt DateTime?
+  id                  String           @id @default(cuid())
+  filmId              String
+  senderProfileId     String
+  recipientUserId     String
+  senderArchivedAt    DateTime?
   recipientArchivedAt DateTime?
-  senderReadAt DateTime?
-  recipientReadAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  messages CreatorMessage[]
+  senderReadAt        DateTime?
+  recipientReadAt     DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  messages            CreatorMessage[]
+
   @@unique([filmId, senderProfileId, recipientUserId])
   @@index([recipientUserId, recipientArchivedAt, updatedAt])
   @@index([senderProfileId, senderArchivedAt, updatedAt])
 }
+
 model CreatorMessage {
-  id String @id @default(cuid())
+  id             String              @id @default(cuid())
   conversationId String
-  senderUserId String
-  body String
-  status String @default("VISIBLE")
-  createdAt DateTime @default(now())
-  conversation CreatorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderUserId   String
+  body           String
+  status         String              @default("VISIBLE")
+  createdAt      DateTime            @default(now())
+  conversation   CreatorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   @@index([conversationId, createdAt])
 }
+
 model UserBlock {
   blockerUserId String
   blockedUserId String
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+
   @@id([blockerUserId, blockedUserId])
 }
+
 model TrailerAsset {
-  id String @id @default(cuid())
-  filmId String
-  url String
-  thumbnailUrl String?
-  languageCode String @default("en")
+  id              String    @id @default(cuid())
+  filmId          String
+  url             String
+  thumbnailUrl    String?
+  languageCode    String    @default("en")
   durationSeconds Int?
-  available Boolean @default(true)
-  approvedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  available       Boolean   @default(true)
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
   @@index([filmId, available, approvedAt])
 }
 
 model Device {
-  id String @id @default(cuid())
-  userId String
-  name String
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
   fingerprintHash String
-  lastIpHash String?
-  browser String?
+  lastIpHash      String?
+  browser         String?
   operatingSystem String?
-  verifiedAt DateTime?
-  lastActiveAt DateTime @default(now())
-  createdAt DateTime @default(now())
+  verifiedAt      DateTime?
+  lastActiveAt    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
 }
+
 model PlaybackSession {
-  id String @id @default(cuid())
-  profileId String
-  deviceId String
-  filmId String?
-  episodeId String?
-  maxQuality Int
-  tokenId String @unique
-  startedAt DateTime @default(now())
-  lastHeartbeatAt DateTime @default(now())
-  endedAt DateTime?
+  id              String    @id @default(cuid())
+  profileId       String
+  deviceId        String
+  filmId          String?
+  episodeId       String?
+  maxQuality      Int
+  tokenId         String    @unique
+  startedAt       DateTime  @default(now())
+  lastHeartbeatAt DateTime  @default(now())
+  endedAt         DateTime?
+
   @@index([profileId, endedAt])
 }
 
 model Order {
-  id String @id @default(cuid())
-  userId String
-  status String @default("PENDING")
-  amount BigInt
-  currency String @db.VarChar(3)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  items OrderItem[]
-  payments Payment[]
+  id        String      @id @default(cuid())
+  userId    String
+  status    String      @default("PENDING")
+  amount    BigInt
+  currency  String      @db.VarChar(3)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     OrderItem[]
+  payments  Payment[]
 }
+
 model OrderItem {
-  id String @id @default(cuid())
-  orderId String
-  productType String
-  productId String
-  description String
-  unitAmount BigInt
+  id             String @id @default(cuid())
+  orderId        String
+  productType    String
+  productId      String
+  description    String
+  unitAmount     BigInt
   discountAmount BigInt @default(0)
-  totalAmount BigInt
-  currency String @db.VarChar(3)
-  snapshot Json
-  order Order @relation(fields: [orderId], references: [id])
+  totalAmount    BigInt
+  currency       String @db.VarChar(3)
+  snapshot       Json
+  order          Order  @relation(fields: [orderId], references: [id])
 }
+
 model Payment {
-  id String @id @default(cuid())
-  orderId String
-  provider PaymentMethod
+  id                    String                  @id @default(cuid())
+  orderId               String
+  provider              PaymentMethod
   providerTransactionId String?
-  status PaymentStatus @default(PENDING)
-  amount BigInt
-  currency String @db.VarChar(3)
-  metadata Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  order Order @relation(fields: [orderId], references: [id])
-  refunds Refund[]
-  events PaymentProviderEvent[]
-  reconciliations PaymentReconciliation[]
-  disputes PaymentDispute[]
+  status                PaymentStatus           @default(PENDING)
+  amount                BigInt
+  currency              String                  @db.VarChar(3)
+  metadata              Json?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  order                 Order                   @relation(fields: [orderId], references: [id])
+  refunds               Refund[]
+  events                PaymentProviderEvent[]
+  reconciliations       PaymentReconciliation[]
+  disputes              PaymentDispute[]
+
   @@index([provider, providerTransactionId])
 }
+
 model PaymentProviderEvent {
-  id String @id @default(cuid())
-  paymentId String?
-  provider PaymentMethod
+  id              String        @id @default(cuid())
+  paymentId       String?
+  provider        PaymentMethod
   providerEventId String
-  eventType String
-  payload Json
-  receivedAt DateTime @default(now())
-  processedAt DateTime?
-  payment Payment? @relation(fields: [paymentId], references: [id])
+  eventType       String
+  payload         Json
+  receivedAt      DateTime      @default(now())
+  processedAt     DateTime?
+  payment         Payment?      @relation(fields: [paymentId], references: [id])
+
   @@unique([provider, providerEventId])
 }
+
 model Refund {
   id                 String               @id @default(cuid())
   paymentId          String
@@ -949,127 +1070,139 @@ model Refund {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   payment            Payment              @relation(fields: [paymentId], references: [id])
+
   @@index([paymentId, workflowStatus])
 }
+
 model PaymentReconciliation {
-  id                    String               @id @default(cuid())
-  paymentId             String
-  status                ReconciliationStatus
-  providerStatus        PaymentStatus?
-  providerAmount        BigInt?
-  providerCurrency      String?              @db.VarChar(3)
-  notes                 String?
-  checkedByAdminId      String
-  resolvedByAdminId     String?
-  resolvedAt            DateTime?
-  createdAt             DateTime             @default(now())
-  payment               Payment              @relation(fields: [paymentId], references: [id])
+  id                String               @id @default(cuid())
+  paymentId         String
+  status            ReconciliationStatus
+  providerStatus    PaymentStatus?
+  providerAmount    BigInt?
+  providerCurrency  String?              @db.VarChar(3)
+  notes             String?
+  checkedByAdminId  String
+  resolvedByAdminId String?
+  resolvedAt        DateTime?
+  createdAt         DateTime             @default(now())
+  payment           Payment              @relation(fields: [paymentId], references: [id])
+
   @@index([paymentId, createdAt])
   @@index([status, createdAt])
 }
+
 model PaymentDispute {
-  id                    String        @id @default(cuid())
-  paymentId             String
-  providerDisputeId     String?
-  status                DisputeStatus @default(OPEN)
-  reason                String
-  amount                BigInt?
-  currency              String?       @db.VarChar(3)
-  responseDueAt         DateTime?
-  notes                 String?
-  openedByAdminId       String
-  resolvedByAdminId     String?
-  resolvedAt            DateTime?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  payment               Payment       @relation(fields: [paymentId], references: [id])
+  id                String        @id @default(cuid())
+  paymentId         String
+  providerDisputeId String?
+  status            DisputeStatus @default(OPEN)
+  reason            String
+  amount            BigInt?
+  currency          String?       @db.VarChar(3)
+  responseDueAt     DateTime?
+  notes             String?
+  openedByAdminId   String
+  resolvedByAdminId String?
+  resolvedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  payment           Payment       @relation(fields: [paymentId], references: [id])
+
   @@index([paymentId, status])
   @@index([status, responseDueAt])
 }
+
 model Purchase {
-  id String @id @default(cuid())
-  userId String
-  filmId String
-  orderId String @unique
-  amount BigInt
-  currency String @db.VarChar(3)
+  id        String   @id @default(cuid())
+  userId    String
+  filmId    String
+  orderId   String   @unique
+  amount    BigInt
+  currency  String   @db.VarChar(3)
   createdAt DateTime @default(now())
 }
+
 model Rental {
-  id String @id @default(cuid())
-  userId String
-  filmId String
-  orderId String @unique
-  amount BigInt
-  currency String @db.VarChar(3)
-  purchasedAt DateTime @default(now())
-  activatedAt DateTime?
-  expiresAt DateTime?
-  allowedDevices Int @default(2)
+  id             String    @id @default(cuid())
+  userId         String
+  filmId         String
+  orderId        String    @unique
+  amount         BigInt
+  currency       String    @db.VarChar(3)
+  purchasedAt    DateTime  @default(now())
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  allowedDevices Int       @default(2)
 }
+
 model Entitlement {
-  id String @id @default(cuid())
-  userId String
-  profileId String?
-  filmId String?
-  episodeId String?
-  source EntitlementSource
-  sourceId String
+  id           String            @id @default(cuid())
+  userId       String
+  profileId    String?
+  filmId       String?
+  episodeId    String?
+  source       EntitlementSource
+  sourceId     String
   qualityLimit Int
-  startsAt DateTime
-  expiresAt DateTime?
-  revokedAt DateTime?
+  startsAt     DateTime
+  expiresAt    DateTime?
+  revokedAt    DateTime?
+
   @@index([userId, profileId, filmId, episodeId])
 }
 
 model Offer {
-  id String @id @default(cuid())
-  name String
-  description String
-  discountType String
-  discountValue Int?
-  fixedAmount BigInt?
-  currency String?
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  discountType    String
+  discountValue   Int?
+  fixedAmount     BigInt?
+  currency        String?
   eligibleCountry String?
-  startsAt DateTime
-  expiresAt DateTime
-  maxRedemptions Int?
-  active Boolean @default(true)
+  startsAt        DateTime
+  expiresAt       DateTime
+  maxRedemptions  Int?
+  active          Boolean  @default(true)
 }
+
 model Coupon {
-  id String @id @default(cuid())
-  code String @unique
-  offerId String
-  active Boolean @default(true)
-  redemptions Int @default(0)
-  perUserLimit Int @default(1)
+  id           String  @id @default(cuid())
+  code         String  @unique
+  offerId      String
+  active       Boolean @default(true)
+  redemptions  Int     @default(0)
+  perUserLimit Int     @default(1)
 }
+
 model Notification {
-  id String @id @default(cuid())
-  userId String
-  type String
-  title String
-  body String
-  href String?
-  readAt DateTime?
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model Page {
-  id             String          @id @default(cuid())
-  slug           String          @unique
+  id             String             @id @default(cuid())
+  slug           String             @unique
   title          String
-  status         ContentStatus   @default(DRAFT)
-  reviewStatus   CmsReviewStatus @default(DRAFT)
+  status         ContentStatus      @default(DRAFT)
+  reviewStatus   CmsReviewStatus    @default(DRAFT)
   sections       Json
-  currentVersion Int             @default(1)
+  currentVersion Int                @default(1)
   scheduledAt    DateTime?
   publishedAt    DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   revisions      PageRevision[]
   previewTokens  PagePreviewToken[]
 }
+
 model PageRevision {
   id               String   @id @default(cuid())
   pageId           String
@@ -1079,21 +1212,25 @@ model PageRevision {
   changeNote       String?
   createdByAdminId String
   createdAt        DateTime @default(now())
-  page              Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page             Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
   @@unique([pageId, version])
   @@index([pageId, createdAt])
 }
+
 model PagePreviewToken {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   pageId           String
-  tokenHash        String   @unique
+  tokenHash        String    @unique
   expiresAt        DateTime
   revokedAt        DateTime?
   createdByAdminId String
-  createdAt        DateTime @default(now())
-  page              Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  page             Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
   @@index([pageId, expiresAt])
 }
+
 model RedirectRule {
   id               String   @id @default(cuid())
   sourcePath       String   @unique
@@ -1103,106 +1240,214 @@ model RedirectRule {
   createdByAdminId String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
   @@index([active, sourcePath])
 }
+
 model NavigationItem {
-  id String @id @default(cuid())
-  menu String
-  label String
-  href String?
+  id       String  @id @default(cuid())
+  menu     String
+  label    String
+  href     String?
   parentId String?
   position Int
-  enabled Boolean @default(true)
+  enabled  Boolean @default(true)
 }
+
 model HomepageSection {
-  id String @id @default(cuid())
-  type String
-  title String?
-  props Json
-  position Int @unique
-  enabled Boolean @default(true)
-  startsAt DateTime?
+  id        String    @id @default(cuid())
+  type      String
+  title     String?
+  props     Json
+  position  Int       @unique
+  enabled   Boolean   @default(true)
+  startsAt  DateTime?
   expiresAt DateTime?
 }
+
 model Banner {
-  id String @id @default(cuid())
-  title String
-  body String?
-  imageUrl String?
-  href String?
-  startsAt DateTime?
+  id        String    @id @default(cuid())
+  title     String
+  body      String?
+  imageUrl  String?
+  href      String?
+  startsAt  DateTime?
   expiresAt DateTime?
-  enabled Boolean @default(false)
+  enabled   Boolean   @default(false)
 }
+
 model AnalyticsEvent {
-  id String @id @default(cuid())
-  name String
-  userId String?
-  profileId String?
-  sessionId String?
+  id          String   @id @default(cuid())
+  name        String
+  userId      String?
+  profileId   String?
+  sessionId   String?
   countryCode String?
-  properties Json?
-  occurredAt DateTime @default(now())
+  properties  Json?
+  occurredAt  DateTime @default(now())
+
   @@index([name, occurredAt])
 }
 
+model AnalyticsAggregate {
+  id            String   @id @default(cuid())
+  day           DateTime @db.Date
+  metric        String
+  dimensionHash String
+  dimensions    Json
+  count         BigInt   @default(0)
+  total         Float?
+  consentScope  String   @default("PRODUCT_ANALYTICS")
+  generatedAt   DateTime @default(now())
+
+  @@unique([day, metric, dimensionHash])
+  @@index([metric, day])
+}
+
+model FeatureFlag {
+  key              String                @id
+  description      String
+  enabled          Boolean               @default(false)
+  rolloutPercent   Int                   @default(0)
+  rules            Json?
+  version          Int                   @default(1)
+  updatedByAdminId String
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  revisions        FeatureFlagRevision[]
+}
+
+model FeatureFlagRevision {
+  id               String      @id @default(cuid())
+  flagKey          String
+  version          Int
+  enabled          Boolean
+  rolloutPercent   Int
+  rules            Json?
+  reason           String
+  createdByAdminId String
+  createdAt        DateTime    @default(now())
+  flag             FeatureFlag @relation(fields: [flagKey], references: [key], onDelete: Cascade)
+
+  @@unique([flagKey, version])
+}
+
+model SecurityAlert {
+  id                    String        @id @default(cuid())
+  fingerprint           String        @unique
+  source                String
+  severity              AlertSeverity
+  status                AlertStatus   @default(OPEN)
+  title                 String
+  details               Json?
+  occurrences           Int           @default(1)
+  firstSeenAt           DateTime      @default(now())
+  lastSeenAt            DateTime      @default(now())
+  acknowledgedByAdminId String?
+  resolvedByAdminId     String?
+  resolution            String?
+  resolvedAt            DateTime?
+
+  @@index([status, severity, lastSeenAt])
+}
+
+model Incident {
+  id               String         @id @default(cuid())
+  title            String
+  summary          String
+  severity         AlertSeverity
+  status           IncidentStatus @default(OPEN)
+  commanderAdminId String
+  resolution       String?
+  startedAt        DateTime       @default(now())
+  mitigatedAt      DateTime?
+  resolvedAt       DateTime?
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status, severity, startedAt])
+}
+
+model SecretRotationRecord {
+  id                String   @id @default(cuid())
+  system            String
+  keyAlias          String
+  status            String
+  rotatedAt         DateTime
+  nextRotationDueAt DateTime
+  evidenceReference String?
+  recordedByAdminId String
+  createdAt         DateTime @default(now())
+
+  @@unique([system, keyAlias, rotatedAt])
+  @@index([status, nextRotationDueAt])
+}
+
 model AdminUser {
-  id String @id @default(cuid())
-  userId String @unique
+  id                  String                 @id @default(cuid())
+  userId              String                 @unique
   totpSecretEncrypted String?
   twoFactorVerifiedAt DateTime?
   lastSensitiveAuthAt DateTime?
-  active Boolean @default(true)
-  roles AdminUserRole[]
-  recoveryCodes AdminMfaRecoveryCode[]
+  active              Boolean                @default(true)
+  roles               AdminUserRole[]
+  recoveryCodes       AdminMfaRecoveryCode[]
 }
+
 model AdminMfaRecoveryCode {
-  id String @id @default(cuid())
+  id          String    @id @default(cuid())
   adminUserId String
-  codeHash String @unique
-  usedAt DateTime?
-  createdAt DateTime @default(now())
-  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  codeHash    String    @unique
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
   @@index([adminUserId, usedAt])
 }
+
 model AdminRole {
-  id String @id @default(cuid())
-  name AdminRoleName @unique
+  id          String          @id @default(cuid())
+  name        AdminRoleName   @unique
   permissions String[]
-  users AdminUserRole[]
+  users       AdminUserRole[]
 }
+
 model AdminUserRole {
   adminUserId String
-  roleId String
-  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
-  role AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId      String
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role        AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
   @@id([adminUserId, roleId])
 }
+
 model AuditLog {
-  id String @id @default(cuid())
-  adminUserId String?
-  action String
-  targetType String
-  targetId String?
-  outcome String @default("SUCCEEDED")
-  reason String?
-  requestId String?
+  id            String   @id @default(cuid())
+  adminUserId   String?
+  action        String
+  targetType    String
+  targetId      String?
+  outcome       String   @default("SUCCEEDED")
+  reason        String?
+  requestId     String?
   correlationId String?
-  ipHash String?
-  before Json?
-  after Json?
-  metadata Json?
-  createdAt DateTime @default(now())
+  ipHash        String?
+  before        Json?
+  after         Json?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
   @@index([targetType, targetId])
   @@index([adminUserId, createdAt])
   @@index([action, createdAt])
   @@index([correlationId])
 }
+
 model PlatformSetting {
-  key String @id
-  value Json
+  key       String   @id
+  value     Json
   updatedAt DateTime @updatedAt
 }
+
 model IngestionJob {
   id             String             @id @default(cuid())
   mediaAssetId   String
@@ -1227,22 +1472,25 @@ model IngestionJob {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   attemptsLog    IngestionAttempt[]
+
   @@index([status, nextAttemptAt, priority])
   @@index([mediaAssetId, createdAt])
 }
+
 model IngestionAttempt {
-  id           String   @id @default(cuid())
+  id             String       @id @default(cuid())
   ingestionJobId String
-  attempt      Int
-  workerId     String
-  stage        String
-  startedAt    DateTime @default(now())
-  heartbeatAt  DateTime @default(now())
-  finishedAt   DateTime?
-  outcome      String?
-  error        String?
-  metadata     Json?
-  ingestionJob IngestionJob @relation(fields: [ingestionJobId], references: [id], onDelete: Cascade)
+  attempt        Int
+  workerId       String
+  stage          String
+  startedAt      DateTime     @default(now())
+  heartbeatAt    DateTime     @default(now())
+  finishedAt     DateTime?
+  outcome        String?
+  error          String?
+  metadata       Json?
+  ingestionJob   IngestionJob @relation(fields: [ingestionJobId], references: [id], onDelete: Cascade)
+
   @@unique([ingestionJobId, attempt])
   @@index([workerId, finishedAt])
 }

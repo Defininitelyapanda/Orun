@@ -23,6 +23,7 @@ Audit date: 2026-10-20. This document records observed repository state and the 
 | Payments | Functional foundation | Provider verification and idempotent webhook processing are joined by provider reconciliation, dispute records, capped idempotent refund requests, independent approval and provider-backed execution. Payout operations, automated settlement imports and production-provider certification remain. |
 | Media pipeline | Functional foundation | Ingestion now persists stages, attempts, leases, retry timing and dead-letter state; the worker fails closed without a malware scanner, constrains paths, records scan state and supports audited recovery/quarantine controls. Production worker topology, storage handoff, DRM, telemetry and recovery drills remain external requirements. |
 | CMS | Functional foundation | Pages now have immutable revisions, draft/review/approval transitions, hashed expiring preview tokens, MFA-gated publish/schedule operations, a secret-authenticated due-publication worker endpoint and redirect records. Provider cron configuration, redirect request integration and a richer visual page builder remain. |
+| Operations and security | Functional foundation | Consent-scoped daily analytics aggregates, optimistic-lock feature flags with immutable revisions, deduplicated security alerts, audited incident transitions and secret-rotation metadata are implemented. Alert routing, scheduler configuration and observability providers remain deployment requirements. |
 | Audit | Foundation implemented | Structured fields and append-only database trigger are added. Existing mutation routes still need systematic instrumentation. |
 | Backups and disaster recovery | Missing operational proof | The application cannot validate provider backups, PITR, restore drills, RPO or RTO from source code alone. |
 
@@ -57,7 +58,7 @@ Sensitive actions must additionally require MFA and recent authentication. The s
 4. Catalogue, taxonomy and CMS: revisioning, previews, approvals, scheduling and redirects; remove demo catalogue consumers. **CMS workflow foundation delivered; catalogue migration and runtime redirect integration remain.**
 5. Commerce: payment operations, reconciliation, disputes, refunds with dual controls, subscriptions, offers and entitlements. **Payment/refund/dispute and subscription operations foundation delivered; offer lifecycle, automated settlement imports and payout controls remain.**
 6. Media operations: resilient resumable ingestion, scanning, rendition management, DRM/key integration, queue/dead-letter controls and recovery. **Persisted scan/retry/dead-letter and operator recovery foundation delivered; production storage/DRM topology remains.**
-7. Analytics, security and operations: consent-aware aggregation, alerts, feature flags, secrets rotation and incident tooling.
+7. Analytics, security and operations: consent-aware aggregation, alerts, feature flags, secrets rotation and incident tooling. **Control-plane foundation delivered; provider scheduling and alert routing remain.**
 8. Validation and launch: integration/E2E/security/load tests, observability, backup restore drill, migration rehearsal and rollback exercise.
 
 ## External requirements and blockers

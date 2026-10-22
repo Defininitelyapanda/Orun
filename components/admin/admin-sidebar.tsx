@@ -1,10 +1,10 @@
 import type { AdminRoleName } from "@prisma/client";
 import Link from "next/link";
-import { Activity,BarChart3,Clapperboard,CreditCard,FileText,Film,LayoutDashboard,MessageSquare,Settings,Shield,Tags,Users } from "lucide-react";
+import { Activity,BarChart3,Clapperboard,CreditCard,FileText,Film,LayoutDashboard,MessageSquare,Settings,Shield,Tags,Users,Workflow } from "lucide-react";
 import { anyRoleAllows } from "@/lib/auth/permissions";
 
 const items=[
- ["Dashboard",LayoutDashboard,"/admin",null],["Content",Clapperboard,"/admin/content","catalog:read"],["CMS",FileText,"/admin/cms","cms:read"],["Taxonomy",Tags,"/admin/taxonomy","catalog:read"],["Users",Users,"/admin/users","users:read"],["Payments",CreditCard,"/admin/payments","payments:read"],["Subscriptions",CreditCard,"/admin/subscriptions","subscriptions:read"],["Media",Film,"/admin/media","media:read"],["Analytics",BarChart3,"/admin/analytics","analytics:read"],["Moderation",MessageSquare,"/admin/moderation","moderation:read"],["Audit",Shield,"/admin/audit","audit:read"],["Security",Shield,"/admin/security","security:read"],["Settings",Settings,"/admin/settings","settings:read"],["System",Activity,"/admin/system","system:read"],
+ ["Dashboard",LayoutDashboard,"/admin",null],["Content",Clapperboard,"/admin/content","catalog:read"],["CMS",FileText,"/admin/cms","cms:read"],["Taxonomy",Tags,"/admin/taxonomy","catalog:read"],["Users",Users,"/admin/users","users:read"],["Payments",CreditCard,"/admin/payments","payments:read"],["Subscriptions",CreditCard,"/admin/subscriptions","subscriptions:read"],["Media",Film,"/admin/media","media:read"],["Analytics",BarChart3,"/admin/analytics","analytics:read"],["Operations",Workflow,"/admin/operations","operations:read"],["Moderation",MessageSquare,"/admin/moderation","moderation:read"],["Audit",Shield,"/admin/audit","audit:read"],["Security",Shield,"/admin/security","security:read"],["Settings",Settings,"/admin/settings","settings:read"],["System",Activity,"/admin/system","system:read"],
 ] as const;
 
 export function AdminSidebar({roles}:{roles:readonly AdminRoleName[]}){
