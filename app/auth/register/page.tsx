@@ -1,1 +1,9 @@
-import Link from"next/link";export default function Register(){return <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_top,#0d2747,#05070b_55%)] p-5"><section className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[.055] p-7"><Link href="/" className="font-display text-2xl tracking-[.2em]">ORUN</Link><h1 className="mt-10 font-display text-3xl">Begin your journey</h1><form action="/api/auth/register" method="post" className="mt-8 space-y-4">{[["Name","name","text"],["Email","email","email"],["Password","password","password"]].map(([label,name,type])=><label key={name} className="block text-sm text-white/60">{label}<input required type={type} name={name} autoComplete={name==="password"?"new-password":name} className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-white"/></label>)}<button className="primary-action w-full" type="submit">Create account</button></form><p className="mt-6 text-sm text-white/45">Already here? <Link href="/auth/login" className="text-amber">Sign in</Link></p></section></main>}
+import Link from "next/link";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { RegistrationForm } from "@/components/auth/registration-form";
+
+const errors: Record<string, string> = { "identifier-in-use": "That sign-up identifier is already in use.", "password-mismatch": "The passwords do not match.", "rate-limit": "Too many registration attempts. Please try again later.", unavailable: "Registration is temporarily unavailable.", invalid: "Check the information entered and try again." };
+export default async function Register({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
+  return <AuthShell title="Begin your journey" description="Create an ORUN account using an email address, phone number, or username." notice={error ? errors[error] ?? errors.invalid : undefined} footer={<>Already here? <Link href="/auth/login" className="text-amber">Sign in</Link></>}><RegistrationForm /></AuthShell>;
+}

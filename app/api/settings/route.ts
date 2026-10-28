@@ -29,7 +29,10 @@ async function readSettings() {
     user: {
       name: session.user.name,
       email: session.user.email,
+      username: session.user.username,
+      phoneNumber: session.user.phoneNumber,
       emailVerified: Boolean(session.user.emailVerifiedAt),
+      phoneVerified: Boolean(session.user.phoneVerifiedAt),
       createdAt: session.user.createdAt,
       profile: profile ? { id: profile.id, name: profile.name, locale: profile.locale } : null,
     },

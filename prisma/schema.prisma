@@ -213,9 +213,16 @@ enum AccountDeletionStatus {
 model User {
   id                     String                  @id @default(cuid())
   name                   String
-  email                  String                  @unique
+  email                  String?                 @unique
+  username               String?                 @unique
+  phoneNumber            String?                 @unique
   passwordHash           String
   emailVerifiedAt        DateTime?
+  phoneVerifiedAt        DateTime?
+  failedLoginAttempts    Int                     @default(0)
+  lockedUntil            DateTime?
+  lastLoginAt            DateTime?
+  passwordChangedAt      DateTime                @default(now())
   countryCode            String?                 @db.VarChar(2)
   status                 UserStatus              @default(PENDING)
   marketingOptIn         Boolean                 @default(false)
@@ -231,6 +238,7 @@ model User {
   accountDeletionRequest AccountDeletionRequest?
   securityEvents         SecurityEvent[]
   privacyAuditEvents     PrivacyAuditEvent[]
+  verificationChallenges VerificationChallenge[]
 }
 
 model Profile {
@@ -256,8 +264,26 @@ model Session {
   ipHash        String?
   userAgent     String?
   mfaVerifiedAt DateTime?
+  remembered    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
   revokedAt     DateTime?
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationChallenge {
+  id        String    @id @default(cuid())
+  userId    String
+  kind      String
+  target    String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, createdAt])
+  @@index([target, kind, expiresAt])
 }
 
 model Passkey {
