@@ -13,6 +13,8 @@ export function sessionLifetimeMs(remember: boolean) {
   return remember ? REMEMBERED_SESSION_MS : BROWSER_SESSION_MS;
 }
 
+type AuthenticationOptions = { remember: boolean; ipHash?: string; userAgent?: string; requireAdmin?: boolean; forbidAdmin?: boolean };
+
 export class AuthService {
   constructor(private db: PrismaClient, private passwords: PasswordHasher) {}
 
@@ -44,7 +46,7 @@ export class AuthService {
     return { user, verification: code ? { kind, target: normalized, code } : null };
   }
 
-  async authenticate(identifier: string, password: string, options: { remember: boolean; ipHash?: string; userAgent?: string } = { remember: false }) {
+  async authenticate(identifier: string, password: string, options: AuthenticationOptions = { remember: false }) {
     const { normalized } = normalizeIdentifier(identifier);
     const user = await this.db.user.findFirst({ where: { OR: [{ email: normalized }, { phoneNumber: normalized }, { username: normalized }] } });
     if (!user) {
@@ -52,8 +54,10 @@ export class AuthService {
       throw new Error("INVALID_CREDENTIALS");
     }
     if (user.lockedUntil && user.lockedUntil > new Date()) throw new Error("INVALID_CREDENTIALS");
+    const admin = options.requireAdmin || options.forbidAdmin ? await this.db.adminUser.findUnique({ where: { userId: user.id }, select: { active: true } }) : null;
     const valid = await this.passwords.verify(user.passwordHash, password);
-    if (!valid || user.status !== "ACTIVE") {
+    const allowedAudience = options.requireAdmin ? admin?.active === true : options.forbidAdmin ? admin === null : true;
+    if (!valid || user.status !== "ACTIVE" || !allowedAudience) {
       const failures = user.failedLoginAttempts + 1;
       const lockedUntil = failures >= LOCK_THRESHOLD ? new Date(Date.now() + Math.min(60, 2 ** (failures - LOCK_THRESHOLD) * 5) * 60_000) : null;
       await this.db.$transaction([

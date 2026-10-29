@@ -10,6 +10,12 @@ Login creates a random opaque token. PostgreSQL stores only its SHA-256 hash; th
 
 Five failed account logins trigger a temporary progressive lock. API-level rate limits and generic login/recovery responses reduce brute-force and account-enumeration risk. In-memory request throttling is suitable only as an application guard; production should use a shared Cloudflare rate-limit, Durable Object, or KV-backed counter across isolates.
 
+## Administrator sign-in
+
+Administrators sign in only at `/auth/admin-login` with a private numeric administrator code and password. The member login rejects accounts that have an administrator record, and the administrator route rejects ordinary member accounts. Administrator sessions are browser sessions rather than remembered sessions; existing MFA controls remain available for protected operations.
+
+Configure or rotate the owner account as a one-time database operation by setting `ORUN_OWNER_CODE`, `ORUN_OWNER_PASSWORD`, and optionally `ORUN_OWNER_NAME`, then running `npm run admin:bootstrap`. Remove those environment values after the command completes. The runtime does not need the plaintext administrator password: PostgreSQL retains only its PBKDF2 hash.
+
 ## Password managers
 
 Sign-up, sign-in, verification, recovery, reset, and password-change forms use stable names/IDs and standard autocomplete tokens: `username`, `current-password`, `new-password`, and `one-time-code`. Browsers and operating systems decide whether to generate, save, or autofill credentials. Attribute compatibility is automated; a real Google Password Manager prompt has not been device-certified by this repository.

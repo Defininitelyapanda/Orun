@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     assertRateLimit(rateKey, 8, 15 * 60_000);
     const data = schema.parse(Object.fromEntries(await request.formData()));
     const ipHash = await requestRateLimitKey(request, "ip");
-    const result = await new AuthService(prisma, new Pbkdf2PasswordHasher()).authenticate(data.identifier, data.password, { remember: data.remember === "on", ipHash, userAgent: request.headers.get("user-agent")?.slice(0, 500) });
+    const result = await new AuthService(prisma, new Pbkdf2PasswordHasher()).authenticate(data.identifier, data.password, { remember: data.remember === "on", ipHash, userAgent: request.headers.get("user-agent")?.slice(0, 500), forbidAdmin: true });
     const response = NextResponse.redirect(new URL(safeNext(data.next), request.url), 303);
     response.cookies.set("orun_session", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", ...(result.remembered ? { maxAge: 30 * 24 * 3600 } : {}), priority: "high" });
     return response;

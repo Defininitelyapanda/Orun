@@ -6,7 +6,7 @@ import { anyRoleAllows } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function AdminSearch({searchParams}:{searchParams:Promise<{q?:string}>}){
- let access:Awaited<ReturnType<typeof requireAdmin>>;try{access=await requireAdmin()}catch{redirect("/auth/login?next=/admin/search")}
+ let access:Awaited<ReturnType<typeof requireAdmin>>;try{access=await requireAdmin()}catch{redirect("/auth/admin-login?next=/admin/search")}
  const q=(await searchParams).q?.trim().slice(0,100)??"",roles=access.admin.roles.map(item=>item.role.name) as AdminRoleName[];
  if(q.length<2)return <div className="mt-8"><p className="eyebrow">Global search</p><h1 className="font-display text-3xl">Search the control centre</h1><p className="mt-3 text-sm text-white/45">Enter at least two characters. Results are limited by your assigned permissions.</p></div>;
  const result=await searchRecords(q,roles);

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 export const dynamic="force-dynamic";
 export default async function AdminLayout({children}:{children:ReactNode}){
  let access:Awaited<ReturnType<typeof requireAdmin>>;
- try{access=await requireAdmin()}catch{redirect("/auth/login?next=/admin")}
+ try{access=await requireAdmin()}catch{redirect("/auth/admin-login?next=/admin")}
  const enforcement=await prisma.platformSetting.findUnique({where:{key:"security.adminMfaRequired"},select:{value:true}}).catch(()=>null);
  if(enforcement?.value===true&&(!access.admin.twoFactorVerifiedAt||!hasFreshAdminMfa(access.session.mfaVerifiedAt)))redirect("/auth/admin-mfa");
  const roles=access.admin.roles.map(item=>item.role.name),initials=access.session.user.name.split(/\s+/).map(part=>part[0]).join("").slice(0,2).toUpperCase();

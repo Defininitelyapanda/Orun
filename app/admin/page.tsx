@@ -31,7 +31,7 @@ async function dashboardData(start:Date,end:Date){
 
 export default async function Admin({searchParams}:{searchParams:Promise<{from?:string;to?:string}>}){
  const params=await searchParams;
- try{await requireAdmin()}catch{redirect("/auth/login?next=/admin")}
+ try{await requireAdmin()}catch{redirect("/auth/admin-login?next=/admin")}
  const range=dateRange(params.from,params.to),data=await dashboardData(range.start,range.end);
  return <><div className="mt-8"><p className="eyebrow">Overview</p><h1 className="font-display text-3xl md:text-4xl">Control centre</h1><p className="mt-2 max-w-2xl text-sm text-white/45">Live operational state across members, catalogue, commerce, moderation and media.</p></div><Dashboard data={data} start={range.start} end={range.end}/></>;
 }

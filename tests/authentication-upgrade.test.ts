@@ -50,3 +50,25 @@ describe("password-manager form contract", () => {
     expect(verify).toContain('autoComplete="one-time-code"');
   });
 });
+
+describe("dedicated administrator authentication", () => {
+  it("uses a code-only administrator route and separates it from member login", () => {
+    const adminPage = readFileSync(new URL("../app/auth/admin-login/page.tsx", import.meta.url), "utf8");
+    const adminRoute = readFileSync(new URL("../app/api/auth/admin-login/route.ts", import.meta.url), "utf8");
+    const memberRoute = readFileSync(new URL("../app/api/auth/login/route.ts", import.meta.url), "utf8");
+    expect(adminPage).toContain('action="/api/auth/admin-login"');
+    expect(adminPage).toContain('name="code"');
+    expect(adminPage).toContain('autoComplete="username"');
+    expect(adminPage).toContain('autoComplete="current-password"');
+    expect(adminRoute).toContain("requireAdmin: true");
+    expect(memberRoute).toContain("forbidAdmin: true");
+  });
+
+  it("takes bootstrap credentials from one-time environment variables", () => {
+    const bootstrap = readFileSync(new URL("../scripts/bootstrap-owner.ts", import.meta.url), "utf8");
+    expect(bootstrap).toContain("ORUN_OWNER_CODE");
+    expect(bootstrap).toContain("ORUN_OWNER_PASSWORD");
+    expect(bootstrap).not.toContain("2714");
+    expect(bootstrap).not.toContain("Saint");
+  });
+});
