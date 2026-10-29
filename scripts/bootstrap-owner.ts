@@ -1,4 +1,4 @@
-import { AdminRoleName } from "@prisma/client";
+import { AdminRoleName } from "@/generated/prisma/client";
 import { rolePermissions } from "../lib/auth/permissions";
 import { createPrismaClient } from "../lib/db/client";
 import { Pbkdf2PasswordHasher } from "../lib/auth/passwords";

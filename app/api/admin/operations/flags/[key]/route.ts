@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
 import { appendAuditLog,auditRequestContext } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/auth/admin";

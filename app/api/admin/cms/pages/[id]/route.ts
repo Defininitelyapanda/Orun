@@ -1,4 +1,4 @@
-import type { CmsReviewStatus,ContentStatus,Prisma } from "@prisma/client";
+import type { CmsReviewStatus,ContentStatus,Prisma } from "@/generated/prisma/client";
 import { appendAuditLog,auditRequestContext } from "@/lib/admin/audit";
 import { requireAdmin } from "@/lib/auth/admin";
 import { assertPublishable,cmsPageUpdate,workflowTransition } from "@/lib/cms/workflow";

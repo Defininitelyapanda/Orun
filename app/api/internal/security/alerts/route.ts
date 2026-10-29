@@ -1,4 +1,4 @@
-import type { AlertSeverity,Prisma } from "@prisma/client";
+import type { AlertSeverity,Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { secureTokenMatches,securityFingerprint } from "@/lib/operations/controls";

@@ -1,10 +1,10 @@
 import { randomInt } from "node:crypto";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
 import type { PasswordHasher } from "@/lib/auth/passwords";
 import { normalizeIdentifier, type IdentifierKind } from "@/lib/auth/identifiers";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 import { createOpaqueToken, hashToken, hashVerificationCode } from "@/lib/auth/tokens";
 
-const MIN_PASSWORD_LENGTH = 12;
 const REMEMBERED_SESSION_MS = 30 * 24 * 60 * 60_000;
 const BROWSER_SESSION_MS = 12 * 60 * 60_000;
 const LOCK_THRESHOLD = 5;

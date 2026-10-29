@@ -2,9 +2,10 @@ import { z } from "zod";
 import { currentAuthSession } from "@/lib/auth/session-cookie";
 import { prisma } from "@/lib/db/prisma";
 import { Pbkdf2PasswordHasher } from "@/lib/auth/passwords";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 import { assertRateLimit, assertSameOrigin } from "@/lib/security/request-guards";
 
-const inputSchema = z.object({ currentPassword: z.string().min(1).max(200), newPassword: z.string().min(12).max(200), newPasswordConfirmation: z.string().min(12).max(200) }).strict();
+const inputSchema = z.object({ currentPassword: z.string().min(1).max(200), newPassword: z.string().min(MIN_PASSWORD_LENGTH).max(200), newPasswordConfirmation: z.string().min(MIN_PASSWORD_LENGTH).max(200) }).strict();
 
 export async function POST(request: Request) {
   try {

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
 import { createPrismaClient } from "./client";
 const holder=globalThis as unknown as{prisma?:PrismaClient};
 export const prisma=holder.prisma??createPrismaClient();

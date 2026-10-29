@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
 
 const unconfiguredUrl="postgresql://unconfigured:unconfigured@127.0.0.1:1/unconfigured";
 

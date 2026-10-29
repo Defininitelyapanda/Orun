@@ -1,4 +1,4 @@
-import type { AdminRoleName } from "@prisma/client";
+import type { AdminRoleName } from "@/generated/prisma/client";
 import { notFound,redirect } from "next/navigation";
 import { AdminDataTable } from "@/components/admin/data-table";
 import { UserSecurityActions } from "@/components/admin/user-security-actions";

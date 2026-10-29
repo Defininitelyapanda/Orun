@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ContentAccess, PrismaClient } from "@prisma/client";
+import type { ContentAccess, PrismaClient } from "@/generated/prisma/client";
 import { decideEntitlement } from "./entitlement-service";
 
 const planCodes=["STUDENT","ESSENTIAL","PREMIUM","BLACK"] as const;

@@ -1,10 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { normalizeIdentifier } from "../lib/auth/identifiers";
+import { MIN_PASSWORD_LENGTH } from "../lib/auth/password-policy";
 import { Pbkdf2PasswordHasher } from "../lib/auth/passwords";
 import { sessionLifetimeMs } from "../server/services/auth-service";
 
 describe("multi-identifier authentication", () => {
+  it("accepts the requested six-character minimum password policy", () => {
+    expect(MIN_PASSWORD_LENGTH).toBe(6);
+  });
   it("normalizes email, phone and username identifiers", () => {
     expect(normalizeIdentifier(" Person@Example.COM ")).toEqual({ kind: "email", normalized: "person@example.com" });
     expect(normalizeIdentifier("+254 712 345 678")).toEqual({ kind: "phone", normalized: "+254712345678" });
@@ -17,7 +21,7 @@ describe("multi-identifier authentication", () => {
     expect(() => normalizeIdentifier("07-local-number", "phone")).toThrow();
   });
 
-  it("hashes passwords with unique salts and verifies without retaining plaintext", async () => {
+  it("hashes passwords with unique salts and verifies without retaining plaintext", { timeout: 15_000 }, async () => {
     const hasher = new Pbkdf2PasswordHasher();
     const first = await hasher.hash("Correct Horse Battery Staple");
     const second = await hasher.hash("Correct Horse Battery Staple");

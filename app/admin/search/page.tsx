@@ -1,4 +1,4 @@
-import type { AdminRoleName } from "@prisma/client";
+import type { AdminRoleName } from "@/generated/prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/admin";

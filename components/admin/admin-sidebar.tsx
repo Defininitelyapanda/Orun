@@ -1,4 +1,4 @@
-import type { AdminRoleName } from "@prisma/client";
+import type { AdminRoleName } from "@/generated/prisma/client";
 import Link from "next/link";
 import { Activity,BarChart3,Clapperboard,CreditCard,FileText,Film,LayoutDashboard,MessageSquare,Settings,Shield,ShieldCheck,Tags,Users,Workflow } from "lucide-react";
 import { anyRoleAllows } from "@/lib/auth/permissions";

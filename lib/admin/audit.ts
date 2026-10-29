@@ -1,5 +1,5 @@
 import { createHash,randomUUID } from "node:crypto";
-import type { Prisma,PrismaClient } from "@prisma/client";
+import type { Prisma,PrismaClient } from "@/generated/prisma/client";
 
 const sensitive=/password|secret|token|authorization|cookie|card|passkey|totp/i;
 function redact(value:unknown):unknown{
