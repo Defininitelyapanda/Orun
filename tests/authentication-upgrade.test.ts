@@ -4,6 +4,7 @@ import { normalizeIdentifier } from "../lib/auth/identifiers";
 import { MIN_PASSWORD_LENGTH } from "../lib/auth/password-policy";
 import { Pbkdf2PasswordHasher } from "../lib/auth/passwords";
 import { sessionLifetimeMs } from "../server/services/auth-service";
+import { createFallbackAdminSession, verifyFallbackAdminSession } from "../lib/auth/admin-fallback";
 
 describe("multi-identifier authentication", () => {
   it("accepts the requested six-character minimum password policy", () => {
@@ -52,6 +53,21 @@ describe("password-manager form contract", () => {
 });
 
 describe("dedicated administrator authentication", () => {
+  it("signs, expires and rejects tampered database-less administrator sessions", () => {
+    const previous = process.env.AUTH_SECRET;
+    process.env.AUTH_SECRET = "test-only-administrator-signing-key-32-chars";
+    try {
+      const now = Date.UTC(2026, 9, 29);
+      const session = createFallbackAdminSession(now);
+      expect(verifyFallbackAdminSession(session.token, now + 1_000)).toEqual(session.payload);
+      expect(verifyFallbackAdminSession(`${session.token}tampered`, now + 1_000)).toBeNull();
+      expect(verifyFallbackAdminSession(session.token, session.payload.expiresAt)).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.AUTH_SECRET;
+      else process.env.AUTH_SECRET = previous;
+    }
+  });
+
   it("uses a code-only administrator route and separates it from member login", () => {
     const adminPage = readFileSync(new URL("../app/auth/admin-login/page.tsx", import.meta.url), "utf8");
     const adminRoute = readFileSync(new URL("../app/api/auth/admin-login/route.ts", import.meta.url), "utf8");

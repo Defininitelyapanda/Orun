@@ -9,6 +9,9 @@ export default defineConfig({
     assets: { notFoundHandling: "none" },
     env: {
       ASSETS: bindings.assets(),
+      AUTH_SECRET: bindings.secret(),
+      ORUN_ADMIN_CODE: bindings.secret(),
+      ORUN_ADMIN_PASSWORD_HASH: bindings.secret(),
     },
   }),
 });

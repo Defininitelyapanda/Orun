@@ -16,6 +16,8 @@ Administrators sign in only at `/auth/admin-login` with a private numeric admini
 
 Configure or rotate the owner account as a one-time database operation by setting `ORUN_OWNER_CODE`, `ORUN_OWNER_PASSWORD`, and optionally `ORUN_OWNER_NAME`, then running `npm run admin:bootstrap`. Remove those environment values after the command completes. The runtime does not need the plaintext administrator password: PostgreSQL retains only its PBKDF2 hash.
 
+When PostgreSQL is not yet available, Cloudflare may use the restricted bootstrap bindings `ORUN_ADMIN_CODE`, `ORUN_ADMIN_PASSWORD_HASH`, and `AUTH_SECRET`. A successful login creates a signed, `HttpOnly`, `SameSite=Strict` administrator cookie that expires after twelve hours. This mode provides access to the control-centre shell, but database-backed reports and mutations remain unavailable until `DATABASE_URL` is configured. Replace this bootstrap mode with database-backed administrator records when production storage is ready.
+
 ## Password managers
 
 Sign-up, sign-in, verification, recovery, reset, and password-change forms use stable names/IDs and standard autocomplete tokens: `username`, `current-password`, `new-password`, and `one-time-code`. Browsers and operating systems decide whether to generate, save, or autofill credentials. Attribute compatibility is automated; a real Google Password Manager prompt has not been device-certified by this repository.
