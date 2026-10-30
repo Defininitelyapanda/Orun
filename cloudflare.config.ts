@@ -5,7 +5,7 @@ export default defineConfig({
     name: "orun-streaming-platform",
     entrypoint: "vinext/server/fetch-handler",
     compatibilityDate: "2026-10-10",
-    compatibilityFlags: ["nodejs_compat"],
+    compatibilityFlags: ["nodejs_compat", "nodejs_compat_populate_process_env"],
     assets: { notFoundHandling: "none" },
     env: {
       ASSETS: bindings.assets(),
