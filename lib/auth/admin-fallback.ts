@@ -6,6 +6,15 @@ export const FALLBACK_ADMIN_COOKIE = "orun_admin_session";
 const SESSION_TTL_MS = 12 * 60 * 60_000;
 
 type SessionPayload = { version: 1; issuedAt: number; expiresAt: number };
+type AdminRuntimeEnv = Partial<Record<"AUTH_SECRET" | "ORUN_ADMIN_CODE" | "ORUN_ADMIN_PASSWORD_HASH" | "ORUN_ADMIN_NAME", string>>;
+
+const workerEnv: AdminRuntimeEnv = await import("cloudflare:workers")
+  .then(({ env }) => env as AdminRuntimeEnv)
+  .catch(() => ({}));
+
+function runtimeValue(name: keyof AdminRuntimeEnv) {
+  return workerEnv[name] ?? process.env[name];
+}
 
 function secureTextEqual(left: string, right: string) {
   const leftHash = createHash("sha256").update(left).digest();
@@ -14,7 +23,7 @@ function secureTextEqual(left: string, right: string) {
 }
 
 function signingSecret() {
-  const secret = process.env.AUTH_SECRET;
+  const secret = runtimeValue("AUTH_SECRET");
   if (!secret || secret.length < 32) throw new Error("AUTH_SECRET_REQUIRED");
   return secret;
 }
@@ -24,12 +33,12 @@ function signature(value: string) {
 }
 
 export function fallbackAdminConfigured() {
-  return Boolean(process.env.ORUN_ADMIN_CODE && process.env.ORUN_ADMIN_PASSWORD_HASH && process.env.AUTH_SECRET);
+  return Boolean(runtimeValue("ORUN_ADMIN_CODE") && runtimeValue("ORUN_ADMIN_PASSWORD_HASH") && runtimeValue("AUTH_SECRET"));
 }
 
 export async function verifyFallbackAdminCredentials(code: string, password: string) {
-  const configuredCode = process.env.ORUN_ADMIN_CODE ?? "";
-  const passwordHash = process.env.ORUN_ADMIN_PASSWORD_HASH ?? "";
+  const configuredCode = runtimeValue("ORUN_ADMIN_CODE") ?? "";
+  const passwordHash = runtimeValue("ORUN_ADMIN_PASSWORD_HASH") ?? "";
   if (!configuredCode || !passwordHash) return false;
   const codeValid = secureTextEqual(code, configuredCode);
   const passwordValid = await new Pbkdf2PasswordHasher().verify(passwordHash, password).catch(() => false);
@@ -63,7 +72,7 @@ export function fallbackAdminAccess(payload: SessionPayload) {
       id: "cloudflare-owner-session",
       userId: "cloudflare-owner",
       mfaVerifiedAt: issuedAt,
-      user: { id: "cloudflare-owner", name: process.env.ORUN_ADMIN_NAME?.trim() || "ORUN Owner", email: null, username: null, phoneNumber: null, passwordHash: process.env.ORUN_ADMIN_PASSWORD_HASH ?? "" },
+      user: { id: "cloudflare-owner", name: runtimeValue("ORUN_ADMIN_NAME")?.trim() || "ORUN Owner", email: null, username: null, phoneNumber: null, passwordHash: runtimeValue("ORUN_ADMIN_PASSWORD_HASH") ?? "" },
     },
     admin: {
       id: "cloudflare-owner",
