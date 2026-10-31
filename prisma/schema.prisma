@@ -194,6 +194,58 @@ enum AdminRoleName {
   CUSTOMER_SUPPORT
 }
 
+enum CreatorAccessStatus {
+  PENDING_APPROVAL
+  APPROVED
+  SUSPENDED
+  REVOKED
+}
+
+enum CreatorInvitationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  EXPIRED
+  REVOKED
+  PENDING_APPROVAL
+  APPROVED
+  SUSPENDED
+}
+
+enum CreatorSubmissionStatus {
+  DRAFT
+  UPLOADING
+  PROCESSING
+  PENDING_REVIEW
+  APPROVED
+  PUBLISHED
+  CHANGES_REQUESTED
+  REJECTED
+  PROCESSING_FAILED
+  WITHDRAWAL_REQUESTED
+  UNPUBLISHED
+}
+
+enum CreatorProcessingStatus {
+  NOT_STARTED
+  UPLOADING
+  VALIDATING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum SubmissionReviewDecision {
+  APPROVED
+  CHANGES_REQUESTED
+  REJECTED
+}
+
+enum PublicationAction {
+  PUBLISHED
+  UNPUBLISHED
+}
+
 enum DataRequestStatus {
   REQUESTED
   PROCESSING
@@ -241,6 +293,7 @@ model User {
   securityEvents         SecurityEvent[]
   privacyAuditEvents     PrivacyAuditEvent[]
   verificationChallenges VerificationChallenge[]
+  creatorProfile         CreatorProfile?
 }
 
 model Profile {
@@ -513,8 +566,8 @@ model SubscriptionEvent {
 }
 
 model Film {
-  id                         String        @id @default(cuid())
-  slug                       String        @unique
+  id                         String                  @id @default(cuid())
+  slug                       String                  @unique
   title                      String
   description                String
   longDescription            String?
@@ -523,43 +576,47 @@ model Film {
   ageRating                  String?
   countryCode                String
   originalLanguage           String
-  status                     ContentStatus @default(DRAFT)
-  access                     ContentAccess @default(PREMIUM)
-  isOriginal                 Boolean       @default(false)
-  isShort                    Boolean       @default(false)
-  contentFormat              String        @default("FEATURE_FILM")
+  status                     ContentStatus           @default(DRAFT)
+  access                     ContentAccess           @default(PREMIUM)
+  isOriginal                 Boolean                 @default(false)
+  isShort                    Boolean                 @default(false)
+  contentFormat              String                  @default("FEATURE_FILM")
   region                     String?
   culturalContext            String?
-  filmingLocations           String[]      @default([])
-  productionStatus           String        @default("RELEASED")
+  filmingLocations           String[]                @default([])
+  productionStatus           String                  @default("RELEASED")
   productionCompany          String?
   originalReleaseDate        DateTime?
-  awards                     String[]      @default([])
-  festivalSelections         String[]      @default([])
+  awards                     String[]                @default([])
+  festivalSelections         String[]                @default([])
   aspectRatio                String?
-  dubbedLanguages            String[]      @default([])
-  subtitleLanguages          String[]      @default([])
-  closedCaptions             Boolean       @default(false)
-  audioDescription           Boolean       @default(false)
-  signLanguageInterpretation Boolean       @default(false)
-  videoQualities             String[]      @default([])
-  popularityScore            Float         @default(0)
-  trending                   Boolean       @default(false)
-  featured                   Boolean       @default(false)
-  privateMessagesEnabled     Boolean       @default(true)
-  commentsEnabled            Boolean       @default(true)
-  ratingsEnabled             Boolean       @default(true)
-  trailersEnabled            Boolean       @default(true)
+  dubbedLanguages            String[]                @default([])
+  subtitleLanguages          String[]                @default([])
+  closedCaptions             Boolean                 @default(false)
+  audioDescription           Boolean                 @default(false)
+  signLanguageInterpretation Boolean                 @default(false)
+  videoQualities             String[]                @default([])
+  popularityScore            Float                   @default(0)
+  trending                   Boolean                 @default(false)
+  featured                   Boolean                 @default(false)
+  privateMessagesEnabled     Boolean                 @default(true)
+  commentsEnabled            Boolean                 @default(true)
+  ratingsEnabled             Boolean                 @default(true)
+  trailersEnabled            Boolean                 @default(true)
   heroOrder                  Int?
   heroDisplaySeconds         Int?
   purchaseAmount             BigInt?
   rentalAmount               BigInt?
-  currency                   String?       @db.VarChar(3)
+  currency                   String?                 @db.VarChar(3)
   publishedAt                DateTime?
   seoTitle                   String?
   seoDescription             String?
-  createdAt                  DateTime      @default(now())
-  updatedAt                  DateTime      @updatedAt
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+  creatorPermissions         CreatorFilmPermission[]
+  creatorSubmissions         FilmSubmission[]
+  creatorAnalytics           CreatorFilmAnalytics[]
+  publicationRecords         FilmPublicationRecord[]
 
   @@index([status, publishedAt])
   @@index([status, year, id])
@@ -795,23 +852,193 @@ model Person {
 }
 
 model MediaAsset {
-  id                 String          @id @default(cuid())
-  filmId             String?
-  episodeId          String?
-  kind               MediaKind
-  status             MediaStatus     @default(UPLOADED)
-  storageKey         String
-  sourceFilename     String
-  contentType        String
-  sizeBytes          BigInt
-  checksum           String?
-  processingProgress Int             @default(0)
-  metadata           Json?
-  errorMessage       String?
-  scanStatus         MediaScanStatus @default(PENDING)
-  quarantinedAt      DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                  String                 @id @default(cuid())
+  filmId              String?
+  episodeId           String?
+  kind                MediaKind
+  status              MediaStatus            @default(UPLOADED)
+  storageKey          String
+  sourceFilename      String
+  contentType         String
+  sizeBytes           BigInt
+  checksum            String?
+  processingProgress  Int                    @default(0)
+  metadata            Json?
+  errorMessage        String?
+  scanStatus          MediaScanStatus        @default(PENDING)
+  quarantinedAt       DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  submissionVersionId String?
+  submissionVersion   FilmSubmissionVersion? @relation(fields: [submissionVersionId], references: [id], onDelete: SetNull)
+
+  @@index([submissionVersionId])
+}
+
+model CreatorProfile {
+  id                     String                  @id @default(cuid())
+  userId                 String                  @unique
+  displayName            String
+  productionCompany      String?
+  biography              String?
+  websiteUrl             String?
+  countryCode            String?                 @db.VarChar(2)
+  accessStatus           CreatorAccessStatus     @default(PENDING_APPROVAL)
+  termsAcceptedAt        DateTime?
+  contentTermsAcceptedAt DateTime?
+  approvedAt             DateTime?
+  approvedByAdminId      String?
+  suspendedAt            DateTime?
+  suspensionReason       String?
+  uploadQuotaBytes       BigInt                  @default(53687091200)
+  usedUploadBytes        BigInt                  @default(0)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions            CreatorFilmPermission[]
+  submissions            FilmSubmission[]
+  notifications          CreatorNotification[]
+
+  @@index([accessStatus, createdAt])
+}
+
+model CreatorInvitation {
+  id                String                  @id @default(cuid())
+  email             String
+  emailHash         String
+  tokenHash         String?                 @unique
+  intendedName      String?
+  productionCompany String?
+  status            CreatorInvitationStatus @default(DRAFT)
+  expiresAt         DateTime?
+  sentAt            DateTime?
+  acceptedAt        DateTime?
+  acceptedUserId    String?
+  revokedAt         DateTime?
+  invitedByAdminId  String
+  resendCount       Int                     @default(0)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([emailHash, status])
+  @@index([status, expiresAt])
+}
+
+model CreatorFilmPermission {
+  id               String         @id @default(cuid())
+  creatorProfileId String
+  filmId           String
+  permissions      String[]       @default(["READ", "EDIT_METADATA", "SUBMIT", "VIEW_ANALYTICS"])
+  active           Boolean        @default(true)
+  grantedByAdminId String
+  grantedAt        DateTime       @default(now())
+  revokedAt        DateTime?
+  creator          CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  film             Film           @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorProfileId, filmId])
+  @@index([filmId, active])
+}
+
+model FilmSubmission {
+  id                   String                  @id @default(cuid())
+  creatorProfileId     String
+  filmId               String?
+  title                String
+  status               CreatorSubmissionStatus @default(DRAFT)
+  processingStatus     CreatorProcessingStatus @default(NOT_STARTED)
+  currentVersionNumber Int                     @default(1)
+  submittedAt          DateTime?
+  lastFeedbackAt       DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  creator              CreatorProfile          @relation(fields: [creatorProfileId], references: [id], onDelete: Restrict)
+  film                 Film?                   @relation(fields: [filmId], references: [id], onDelete: SetNull)
+  versions             FilmSubmissionVersion[]
+
+  @@index([creatorProfileId, status, updatedAt])
+  @@index([status, processingStatus, submittedAt])
+}
+
+model FilmSubmissionVersion {
+  id                  String                  @id @default(cuid())
+  submissionId        String
+  version             Int
+  metadata            Json
+  rightsDeclaration   Json
+  accessibility       Json?
+  supportingDocuments Json?
+  processingStatus    CreatorProcessingStatus @default(NOT_STARTED)
+  createdByUserId     String
+  submittedAt         DateTime?
+  approvedAt          DateTime?
+  approvedByAdminId   String?
+  createdAt           DateTime                @default(now())
+  submission          FilmSubmission          @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviews             SubmissionReview[]
+  mediaAssets         MediaAsset[]
+  publicationRecords  FilmPublicationRecord[]
+
+  @@unique([submissionId, version])
+  @@index([processingStatus, submittedAt])
+}
+
+model SubmissionReview {
+  id                String                   @id @default(cuid())
+  versionId         String
+  decision          SubmissionReviewDecision
+  feedback          String?
+  requiredChanges   String[]                 @default([])
+  reviewedByAdminId String
+  createdAt         DateTime                 @default(now())
+  version           FilmSubmissionVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId, createdAt])
+}
+
+model FilmPublicationRecord {
+  id                 String                @id @default(cuid())
+  filmId             String
+  versionId          String
+  action             PublicationAction
+  reason             String?
+  performedByAdminId String
+  createdAt          DateTime              @default(now())
+  film               Film                  @relation(fields: [filmId], references: [id], onDelete: Restrict)
+  version            FilmSubmissionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@index([filmId, createdAt])
+  @@index([versionId, action])
+}
+
+model CreatorFilmAnalytics {
+  id             String   @id @default(cuid())
+  filmId         String
+  day            DateTime @db.Date
+  qualifiedViews Int      @default(0)
+  watchSeconds   BigInt   @default(0)
+  startedViews   Int      @default(0)
+  completedViews Int      @default(0)
+  generatedAt    DateTime @default(now())
+  film           Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@unique([filmId, day])
+  @@index([day, filmId])
+}
+
+model CreatorNotification {
+  id               String         @id @default(cuid())
+  creatorProfileId String
+  type             String
+  title            String
+  body             String
+  actionUrl        String?
+  emailSentAt      DateTime?
+  readAt           DateTime?
+  createdAt        DateTime       @default(now())
+  creator          CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([creatorProfileId, readAt, createdAt])
 }
 
 model VideoRendition {

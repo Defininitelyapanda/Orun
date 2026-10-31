@@ -27,3 +27,9 @@ export async function requireAdmin(requirement?: string|AdminRequirement):Promis
   if(options.requireRecentAuth&&(!admin.lastSensitiveAuthAt||admin.lastSensitiveAuthAt<new Date(Date.now()-15*60_000)))throw new Error("REAUTH_REQUIRED");
   return { session, admin };
 }
+
+export async function requireOwner() {
+  const access = await requireAdmin();
+  if (!access.admin.roles.some(item => item.role.name === "OWNER")) throw new Error("OWNER_REQUIRED");
+  return access;
+}
